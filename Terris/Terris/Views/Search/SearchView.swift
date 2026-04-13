@@ -76,10 +76,18 @@ struct SearchView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
+                    Button("Done") {
+                        globeVM.searchedISOCode = nil
+                        dismiss()
+                    }
                 }
             }
             .onAppear { focused = true }
+            .onChange(of: query) { _, newValue in
+                if newValue.isEmpty {
+                    globeVM.searchedISOCode = nil
+                }
+            }
         }
     }
 
@@ -121,12 +129,13 @@ struct SearchView: View {
 
     private var resultsList: some View {
         List {
-            if !filteredCountries.isEmpty {
+                if !filteredCountries.isEmpty {
                 Section("Countries (\(filteredCountries.count))") {
                     ForEach(filteredCountries, id: \.id) { country in
                         CountrySearchRow(country: country)
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                globeVM.searchedISOCode = country.isoCode
                                 globeVM.selectCountry(country)
                                 dismiss()
                             }
@@ -140,6 +149,7 @@ struct SearchView: View {
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 if let country = city.region?.country {
+                                    globeVM.searchedISOCode = country.isoCode
                                     globeVM.selectCountry(country)
                                 }
                                 dismiss()
@@ -154,6 +164,7 @@ struct SearchView: View {
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 if let country = attr.city?.region?.country {
+                                    globeVM.searchedISOCode = country.isoCode
                                     globeVM.selectCountry(country)
                                 }
                                 dismiss()
