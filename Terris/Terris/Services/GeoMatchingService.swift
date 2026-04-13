@@ -5,12 +5,12 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 import CoreData
 
 @MainActor
 final class GeoMatchingService {
     static let shared = GeoMatchingService()
-    private let geocoder = CLGeocoder()
 
     struct GeoMatch {
         let countryName: String?
@@ -21,14 +21,20 @@ final class GeoMatchingService {
 
     func match(latitude: Double, longitude: Double) async -> GeoMatch {
         let location = CLLocation(latitude: latitude, longitude: longitude)
+        guard let request = MKReverseGeocodingRequest(location: location) else {
+            return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil)
+        }
         do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
-            guard let p = placemarks.first else { return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil) }
+            let items = try await request.mapItems
+            guard let item = items.first,
+                  let rep = item.addressRepresentations else {
+                return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil)
+            }
             return GeoMatch(
-                countryName: p.country,
-                countryCode: p.isoCountryCode,
-                cityName: p.locality ?? p.subAdministrativeArea,
-                administrativeArea: p.administrativeArea
+                countryName: rep.regionName,
+                countryCode: rep.__regionCode,   // NS_REFINED_FOR_SWIFT — raw ObjC accessor
+                cityName: rep.cityName,
+                administrativeArea: rep.regionName
             )
         } catch {
             return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil)

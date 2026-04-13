@@ -107,7 +107,7 @@ struct GlobeView: UIViewRepresentable {
                           let iso = props["ISO_A2"] as? String,
                           iso != "-99", iso != "" else { continue }
 
-                    for geo in feature.shapes {
+                    for geo in feature.geometry {
                         let polys: [MKPolygon]
                         if let poly = geo as? MKPolygon {
                             polys = [poly]
