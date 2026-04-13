@@ -175,21 +175,16 @@ struct RootAdaptiveView: View {
     }
     
     // MARK: - Detail Panel (iPad right column)
-    
+
     @ViewBuilder
     private var detailPanel: some View {
         if let country = globeVM.selectedCountry {
             NavigationStack {
-                PlaceDetailView(country: country)
-                    .navigationTitle(country.name ?? "Country")
-                    .navigationBarTitleDisplayMode(.inline)
+                CountryDetailPage(country: country)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button {
-                                withAnimation { globeVM.selectCountry(nil) }
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
+                            Button { withAnimation { globeVM.selectCountry(nil) } } label: {
+                                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -198,87 +193,90 @@ struct RootAdaptiveView: View {
             emptyDetailPanel
         }
     }
-    
+
     private var emptyDetailPanel: some View {
         VStack(spacing: 16) {
-            Image(systemName: "cursorarrow.click")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
-            Text("Select a Country")
-                .font(.title3.bold())
-            Text("Tap any country on the globe to view details, set your travel status, and add notes.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+            Image(systemName: "cursorarrow.click").font(.system(size: 48)).foregroundStyle(.tertiary)
+            Text("Select a Country").font(.title3.bold())
+            Text("Tap any country on the globe to view details, set your travel status, and add memories.")
+                .font(.subheadline).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center).padding(.horizontal, 32)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
-    
-    // MARK: - iPhone Bottom Detail Sheet
-    
-    struct BottomDetailSheet: View {
-        let country: Country
-        var globeVM: GlobeViewModel
-        @State private var isExpanded = false
-        
-        var body: some View {
-            VStack(spacing: 0) {
-                // Handle / collapse bar
-                HStack {
-                    Capsule()
-                        .fill(Color(.tertiaryLabel))
-                        .frame(width: 36, height: 4)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
-                .onTapGesture { withAnimation(.spring()) { isExpanded.toggle() } }
-                
-                if isExpanded {
-                    PlaceDetailView(country: country)
-                        .frame(maxHeight: 500)
-                } else {
-                    // Collapsed summary
-                    HStack(spacing: 12) {
-                        Text(flagEmoji(for: country.isoCode ?? ""))
-                            .font(.title2)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(country.name ?? "").font(.headline)
-                            let s = TravelStatus(rawValue: country.status) ?? .none
-                            Text(s.label).font(.caption).foregroundStyle(s.color)
-                        }
-                        Spacer()
-                        Button {
-                            withAnimation { globeVM.selectCountry(nil) }
-                        } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
-                        }
+}
+
+// MARK: - iPhone Bottom Popup (tappable → full page)
+
+struct BottomDetailSheet: View {
+    let country: Country
+    var globeVM: GlobeViewModel
+    @State private var showDetail = false
+
+    var body: some View {
+        Button {
+            showDetail = true
+        } label: {
+            HStack(spacing: 14) {
+                Text(flagEmoji(for: country.isoCode ?? ""))
+                    .font(.system(size: 36))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(country.name ?? "")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    let s = TravelStatus(rawValue: country.status) ?? .none
+                    HStack(spacing: 5) {
+                        Circle().fill(s.color).frame(width: 8, height: 8)
+                        Text(s.label).font(.caption).foregroundStyle(s.color)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 14)
                 }
+                Spacer()
+                HStack(spacing: 6) {
+                    Text("View details")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                Button {
+                    withAnimation(.spring()) { globeVM.selectCountry(nil) }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(Color(.tertiaryLabel))
+                }
+                .buttonStyle(.plain)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
-                    .shadow(color: .black.opacity(0.25), radius: 20, y: -4)
-            )
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .animation(.spring(response: 0.4, dampingFraction: 0.75), value: globeVM.selectedCountry?.id)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
         }
-        
-        private func flagEmoji(for isoCode: String) -> String {
-            guard isoCode.count == 2 else { return "🏳️" }
-            let base: UInt32 = 127397
-            var result = ""
-            for scalar in isoCode.uppercased().unicodeScalars {
-                guard let s = Unicode.Scalar(base + scalar.value) else { continue }
-                result.append(Character(s))
+        .buttonStyle(.plain)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.18), radius: 16, y: -4)
+        )
+        .padding(.horizontal, 10)
+        .padding(.bottom, 6)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .animation(.spring(response: 0.4, dampingFraction: 0.75), value: country.objectID)
+        .sheet(isPresented: $showDetail) {
+            NavigationStack {
+                CountryDetailPage(country: country)
             }
-            return result.isEmpty ? "🏳️" : result
         }
+    }
+
+    private func flagEmoji(for isoCode: String) -> String {
+        guard isoCode.count == 2 else { return "🏳️" }
+        let base: UInt32 = 127397
+        var result = ""
+        for scalar in isoCode.uppercased().unicodeScalars {
+            guard let s = Unicode.Scalar(base + scalar.value) else { continue }
+            result.append(Character(s))
+        }
+        return result.isEmpty ? "🏳️" : result
     }
 }

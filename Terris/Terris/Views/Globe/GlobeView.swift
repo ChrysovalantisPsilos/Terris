@@ -223,14 +223,21 @@ struct GlobeView: UIViewRepresentable {
             let coord = map.convert(pt, toCoordinateFrom: map)
             let mapPt = MKMapPoint(coord)
 
-            var best: (iso: String, area: Double)? = nil
+            // Among all polygons containing the tap, pick the one whose
+            // centroid is closest to the tap — avoids overseas-territory confusion.
+            var best: (iso: String, dist: Double)? = nil
             for (poly, iso) in isoByPolygon {
                 let renderer = map.renderer(for: poly) as? MKPolygonRenderer
                     ?? MKPolygonRenderer(polygon: poly)
                 let polyPt = renderer.point(for: mapPt)
-                if renderer.path?.contains(polyPt) == true {
-                    let area = poly.boundingMapRect.size.width * poly.boundingMapRect.size.height
-                    if best == nil || area < best!.area { best = (iso, area) }
+                guard renderer.path?.contains(polyPt) == true else { continue }
+
+                // centroid of bounding rect as proxy
+                let br = poly.boundingMapRect
+                let cx = br.midX; let cy = br.midY
+                let dist = hypot(mapPt.x - cx, mapPt.y - cy)
+                if best == nil || dist < best!.dist {
+                    best = (iso, dist)
                 }
             }
 
@@ -376,3 +383,5 @@ extension Notification.Name {
     static let countryStatusChanged = Notification.Name("countryStatusChanged")
 }
 
+
+// MARK: - SwiftUI wrapper

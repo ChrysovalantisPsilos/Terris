@@ -114,12 +114,15 @@ struct PhotoImportView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images) {
-                        Label("Select Photos", systemImage: "photo.badge.plus")
-                    }
-                    .onChange(of: selectedItems) { _, items in
-                        Task { await viewModel.process(items: items) }
+                // Only show re-import button after suggestions are loaded
+                if !viewModel.suggestions.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images) {
+                            Image(systemName: "photo.badge.plus")
+                        }
+                        .onChange(of: selectedItems) { _, items in
+                            Task { await viewModel.process(items: items) }
+                        }
                     }
                 }
             }
@@ -147,6 +150,9 @@ struct PhotoImportView: View {
                     .padding(.vertical, 12)
             }
             .buttonStyle(.borderedProminent)
+            .onChange(of: selectedItems) { _, items in
+                Task { await viewModel.process(items: items) }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -199,71 +205,80 @@ struct PhotoSuggestionCard: View {
     let onConfirm: () -> Void
     let onSkip: () -> Void
 
+    private var hasGPS: Bool { suggestion.exifResult.latitude != nil }
+
     var body: some View {
         HStack(spacing: 14) {
-            // Thumbnail
+            // Thumbnail — grayed out if no GPS
             Image(uiImage: suggestion.image)
                 .resizable()
                 .scaledToFill()
                 .frame(width: 80, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .grayscale(hasGPS ? 0 : 1)
+                .opacity(hasGPS ? 1 : 0.5)
 
             VStack(alignment: .leading, spacing: 6) {
-                // Match info
-                if let match = suggestion.geoMatch, let country = suggestion.matchedCountry {
+                if hasGPS, let match = suggestion.geoMatch, let country = suggestion.matchedCountry {
+                    // GPS match info
                     HStack(spacing: 6) {
                         Text(flagEmoji(for: country.isoCode ?? ""))
                         VStack(alignment: .leading, spacing: 1) {
                             Text(country.name ?? match.countryName ?? "Unknown")
                                 .font(.subheadline.bold())
                             if let city = match.cityName {
-                                Text(city)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                Text(city).font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
-                    // Confidence badge
-                    if suggestion.exifResult.latitude != nil {
-                        Label("GPS matched", systemImage: "location.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.green)
-                    }
-                } else {
-                    Text("No GPS data")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text("Cannot auto-match")
+                    Label("GPS matched", systemImage: "location.fill")
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.green)
+                } else {
+                    // No GPS
+                    Label("GPS location not found", systemImage: "location.slash.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.red)
+                    Text("This photo cannot be auto-matched to a location.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
-                // Date
+
                 if let date = suggestion.exifResult.takenDate {
                     Text(date.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
 
-                // Action buttons
-                HStack(spacing: 8) {
-                    Button("Add", action: onConfirm)
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 5)
-                        .background(Capsule().fill(Color.green.opacity(0.15)))
-                        .foregroundStyle(.green)
-                    Button("Skip", action: onSkip)
-                        .font(.caption)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 5)
-                        .background(Capsule().fill(Color(.secondarySystemFill)))
-                        .foregroundStyle(.secondary)
+                // Only show action buttons for GPS-matched photos
+                if hasGPS {
+                    HStack(spacing: 8) {
+                        Button("Add", action: onConfirm)
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 12).padding(.vertical, 5)
+                            .background(Capsule().fill(Color.green.opacity(0.15)))
+                            .foregroundStyle(.green)
+                        Button("Skip", action: onSkip)
+                            .font(.caption)
+                            .padding(.horizontal, 12).padding(.vertical, 5)
+                            .background(Capsule().fill(Color(.secondarySystemFill)))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             Spacer()
         }
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(hasGPS
+                      ? Color(.secondarySystemGroupedBackground)
+                      : Color(.secondarySystemGroupedBackground).opacity(0.6))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(hasGPS ? Color.clear : Color.red.opacity(0.25), lineWidth: 1)
+        )
     }
 
     private func flagEmoji(for isoCode: String) -> String {
