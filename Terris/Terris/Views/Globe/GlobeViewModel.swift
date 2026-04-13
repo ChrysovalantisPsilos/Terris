@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import MapKit
 import SwiftUI
 import CoreData
 import Observation
@@ -13,17 +12,11 @@ import Observation
 final class GlobeViewModel {
     var selectedCountry: Country?
     var statusFilter: TravelStatus? = nil   // nil = show all
-    var searchedISOCode: String? = nil      // ISO code of the country highlighted via search
+    var searchedISOCode: String? = nil      // ISO code highlighted via search
 
     func selectCountry(_ country: Country?) {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
             selectedCountry = country
         }
     }
-
-    func color(for country: Country) -> Color {
-        let status = TravelStatus(rawValue: country.status) ?? .none
-        return status.color
-    }
 }
-

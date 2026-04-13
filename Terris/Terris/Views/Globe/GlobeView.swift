@@ -2,188 +2,243 @@
 //  GlobeView.swift
 //  Terris
 //
-//  Interactive Apple Maps globe using SwiftUI Map with high-altitude camera.
-//  Coloured circle overlays per TravelStatus. Tap a marker to select a country.
+//  MKMapView with MKPolygon country overlays loaded from countries.geojson.
+//  - Every country body is filled with its TravelStatus colour.
+//  - Tapping anywhere on a country selects it (no pin needed).
+//  - The searched/selected country gets a bright white highlight fill + thick border.
 //
 
 import SwiftUI
 import MapKit
-import CoreData
 
-// MARK: - SwiftUI Map-based Globe
+// MARK: - SwiftUI wrapper
 
-struct GlobeView: View {
+struct GlobeView: UIViewRepresentable {
     var viewModel: GlobeViewModel
     let countries: [Country]
 
-    // Start with a high-altitude camera centred on Europe/Africa
-    @State private var cameraPosition: MapCameraPosition = .camera(
-        MapCamera(
-            centerCoordinate: CLLocationCoordinate2D(latitude: 20, longitude: 10),
-            distance: 15_000_000,
-            heading: 0,
-            pitch: 0
-        )
-    )
-
-    var body: some View {
-        Map(position: $cameraPosition) {
-            ForEach(mapItems, id: \.isoCode) { item in
-                Annotation(item.name, coordinate: item.coordinate) {
-                    CountryPinView(item: item) {
-                        NotificationCenter.default.post(
-                            name: .globeCountryTapped,
-                            object: nil,
-                            userInfo: ["isoCode": item.isoCode]
-                        )
-                    }
-                }
-            }
-        }
-        .mapStyle(.hybrid(elevation: .realistic))
-        .mapControls {
-            MapCompass()
-            MapScaleView()
-        }
-        .ignoresSafeArea()
-        .onChange(of: viewModel.selectedCountry) { _, country in
-            if let country,
-               let iso = country.isoCode,
-               let (lat, lon) = CountryCentroids.all[iso] {
-                withAnimation(.easeInOut(duration: 0.8)) {
-                    cameraPosition = .camera(MapCamera(
-                        centerCoordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
-                        distance: 4_000_000,
-                        heading: 0,
-                        pitch: 0
-                    ))
-                }
-            }
-        }
+    func makeCoordinator() -> Coordinator {
+        Coordinator(viewModel: viewModel, countries: countries)
     }
 
-    // Build lightweight display items from CoreData objects
-    private var mapItems: [CountryMapItem] {
-        let centroids = CountryCentroids.all
-        let searchedISO = viewModel.searchedISOCode
-        return countries.compactMap { country in
-            guard let iso = country.isoCode,
-                  let (lat, lon) = centroids[iso] else { return nil }
-            let status = TravelStatus(rawValue: country.status) ?? .none
-            let isHighlighted = (iso == searchedISO)
-            // Show pin if: has a status OR is the searched country
-            guard status != .none || isHighlighted else { return nil }
-            return CountryMapItem(
-                isoCode: iso,
-                name: country.name ?? iso,
-                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
-                status: status,
-                isHighlighted: isHighlighted
+    func makeUIView(context: Context) -> MKMapView {
+        let map = MKMapView()
+        map.mapType = .hybridFlyover
+        map.showsUserLocation = false
+        map.showsCompass = true
+        map.isRotateEnabled = true
+        map.isPitchEnabled = false
+        map.delegate = context.coordinator
+        context.coordinator.mapView = map
+
+        // Start at a high altitude globe-like view
+        map.camera = MKMapCamera(
+            lookingAtCenter: CLLocationCoordinate2D(latitude: 20, longitude: 10),
+            fromDistance: 15_000_000,
+            pitch: 0,
+            heading: 0
+        )
+
+        // Tap recognizer — hit-tests polygon overlays
+        let tap = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleTap(_:))
+        )
+        tap.delegate = context.coordinator
+        map.addGestureRecognizer(tap)
+
+        // Load GeoJSON polygons on a background thread
+        context.coordinator.loadPolygons()
+
+        return map
+    }
+
+    func updateUIView(_ map: MKMapView, context: Context) {
+        context.coordinator.countries = countries
+        context.coordinator.refreshOverlayColors()
+
+        // Fly to selected country
+        if let iso = viewModel.selectedCountry?.isoCode,
+           iso != context.coordinator.lastFlyToISO,
+           let (lat, lon) = CountryCentroids.all[iso] {
+            context.coordinator.lastFlyToISO = iso
+            let camera = MKMapCamera(
+                lookingAtCenter: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                fromDistance: 3_500_000, pitch: 0, heading: 0
             )
+            map.setCamera(camera, animated: true)
         }
     }
-}
 
-// MARK: - Lightweight value type for map rendering
+    // MARK: - Coordinator
 
-struct CountryMapItem {
-    let isoCode: String
-    let name: String
-    let coordinate: CLLocationCoordinate2D
-    let status: TravelStatus
-    var isHighlighted: Bool = false
-}
+    final class Coordinator: NSObject, MKMapViewDelegate, UIGestureRecognizerDelegate {
+        var viewModel: GlobeViewModel
+        var countries: [Country]
+        weak var mapView: MKMapView?
+        var lastFlyToISO: String? = nil
 
-// MARK: - Pin view
+        // iso → [MKPolygon] (multi-polygon countries have many rings)
+        var polygonsByISO: [String: [MKPolygon]] = [:]
+        // polygon → iso (reverse lookup for tap hit-test)
+        var isoByPolygon: [MKPolygon: String] = [:]
 
-struct CountryPinView: View {
-    let item: CountryMapItem
-    let onTap: () -> Void
-    @State private var isPressed = false
-    @State private var pulse = false
+        init(viewModel: GlobeViewModel, countries: [Country]) {
+            self.viewModel = viewModel
+            self.countries = countries
+        }
 
-    // Highlighted (search result) → white pin
-    // Otherwise → status colour
-    private var pinColor: Color {
-        item.isHighlighted ? .white : item.status.color
-    }
+        // MARK: Load GeoJSON
 
-    private var iconColor: Color {
-        item.isHighlighted ? Color(.systemGray) : .white
-    }
+        func loadPolygons() {
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self,
+                      let url = Bundle.main.url(forResource: "countries", withExtension: "geojson"),
+                      let data = try? Data(contentsOf: url),
+                      let features = try? MKGeoJSONDecoder().decode(data) else { return }
 
-    private var pinIcon: String {
-        item.isHighlighted && item.status == .none ? "magnifyingglass" : item.status.icon
-    }
+                var byISO: [String: [MKPolygon]] = [:]
+                var byPolygon: [MKPolygon: String] = [:]
 
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 2) {
-                ZStack {
-                    // Pulsing ring for highlighted search result
-                    if item.isHighlighted {
-                        Circle()
-                            .stroke(Color.white.opacity(pulse ? 0 : 0.7), lineWidth: 2)
-                            .frame(width: pulse ? 52 : 36, height: pulse ? 52 : 36)
-                            .animation(
-                                .easeOut(duration: 1.2).repeatForever(autoreverses: false),
-                                value: pulse
-                            )
+                for item in features {
+                    guard let feature = item as? MKGeoJSONFeature,
+                          let propData = feature.properties,
+                          let props = try? JSONSerialization.jsonObject(with: propData) as? [String: Any],
+                          let iso = props["ISO_A2"] as? String,
+                          iso != "-99", iso != "" else { continue }
+
+                    for geo in feature.shapes {
+                        let polys: [MKPolygon]
+                        if let poly = geo as? MKPolygon {
+                            polys = [poly]
+                        } else if let multi = geo as? MKMultiPolygon {
+                            polys = multi.polygons
+                        } else { continue }
+
+                        for poly in polys {
+                            poly.title = iso          // store ISO in title for quick lookup
+                            byISO[iso, default: []].append(poly)
+                            byPolygon[poly] = iso
+                        }
                     }
-
-                    // Main circle
-                    Circle()
-                        .fill(pinColor)
-                        .frame(
-                            width: item.isHighlighted ? 34 : 28,
-                            height: item.isHighlighted ? 34 : 28
-                        )
-                        .shadow(
-                            color: pinColor.opacity(item.isHighlighted ? 0.9 : 0.6),
-                            radius: item.isHighlighted ? 8 : 4,
-                            x: 0, y: 2
-                        )
-                        .overlay(
-                            Circle()
-                                .strokeBorder(
-                                    item.isHighlighted ? Color(.systemGray3) : Color.clear,
-                                    lineWidth: 1.5
-                                )
-                        )
-
-                    Image(systemName: pinIcon)
-                        .font(.system(size: item.isHighlighted ? 14 : 12, weight: .bold))
-                        .foregroundStyle(iconColor)
                 }
 
-                // Country label
-                Text(item.name)
-                    .font(.system(size: item.isHighlighted ? 9 : 8, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1)
-                    .background(
-                        item.isHighlighted
-                            ? AnyShapeStyle(Color.white.opacity(0.25))
-                            : AnyShapeStyle(.ultraThinMaterial),
-                        in: Capsule()
-                    )
-                    .lineLimit(1)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, let map = self.mapView else { return }
+                    self.polygonsByISO = byISO
+                    self.isoByPolygon = byPolygon
+                    let all = Array(byPolygon.keys)
+                    map.addOverlays(all, level: .aboveRoads)
+                }
             }
         }
-        .buttonStyle(.plain)
-        .scaleEffect(isPressed ? 1.15 : 1.0)
-        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded   { _ in isPressed = false }
-        )
-        .onAppear {
-            if item.isHighlighted { pulse = true }
+
+        // MARK: Tap handling — hit-test all polygons
+
+        @objc func handleTap(_ gr: UITapGestureRecognizer) {
+            guard let map = mapView else { return }
+            let pt = gr.location(in: map)
+            let coord = map.convert(pt, toCoordinateFrom: map)
+            let mapPt = MKMapPoint(coord)
+
+            // Walk all visible overlays and find the smallest polygon that contains the tap
+            var best: (iso: String, area: Double)? = nil
+            for (poly, iso) in isoByPolygon {
+                let renderer = map.renderer(for: poly) as? MKPolygonRenderer
+                    ?? MKPolygonRenderer(polygon: poly)
+                let polyPt = renderer.point(for: mapPt)
+                if renderer.path?.contains(polyPt) == true {
+                    let area = poly.boundingMapRect.size.width * poly.boundingMapRect.size.height
+                    if best == nil || area < best!.area {
+                        best = (iso, area)
+                    }
+                }
+            }
+
+            if let iso = best?.iso {
+                NotificationCenter.default.post(
+                    name: .globeCountryTapped,
+                    object: nil,
+                    userInfo: ["isoCode": iso]
+                )
+            }
         }
-        .onChange(of: item.isHighlighted) { _, highlighted in
-            pulse = highlighted
+
+        // Allow tap gesture to coexist with map's built-in gestures
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
+        ) -> Bool { true }
+
+        // MARK: Overlay renderer
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            guard let poly = overlay as? MKPolygon else {
+                return MKOverlayRenderer(overlay: overlay)
+            }
+            let renderer = MKPolygonRenderer(polygon: poly)
+            apply(renderer: renderer, iso: poly.title ?? "")
+            return renderer
+        }
+
+        // MARK: Colour logic
+
+        func apply(renderer: MKPolygonRenderer, iso: String) {
+            let country = countries.first { $0.isoCode == iso }
+            let status = TravelStatus(rawValue: country?.status ?? 0) ?? .none
+            let selectedISO = viewModel.selectedCountry?.isoCode
+            let searchedISO = viewModel.searchedISOCode
+            let isSelected = (iso == selectedISO)
+            let isSearched = (iso == searchedISO)
+
+            switch (isSelected, isSearched, status) {
+            case (true, _, _):
+                // Selected: bright white fill + thick accent border
+                renderer.fillColor = UIColor.white.withAlphaComponent(0.35)
+                renderer.strokeColor = UIColor.white
+                renderer.lineWidth = 2.5
+            case (_, true, .none):
+                // Searched, unvisited: white highlight
+                renderer.fillColor = UIColor.white.withAlphaComponent(0.25)
+                renderer.strokeColor = UIColor.white.withAlphaComponent(0.9)
+                renderer.lineWidth = 2.0
+            case (_, true, _):
+                // Searched + has status: status colour brightened
+                renderer.fillColor = uiColor(for: status).withAlphaComponent(0.55)
+                renderer.strokeColor = UIColor.white
+                renderer.lineWidth = 2.0
+            case (_, _, .none):
+                // Unvisited: faint outline only
+                renderer.fillColor = UIColor.clear
+                renderer.strokeColor = UIColor.white.withAlphaComponent(0.08)
+                renderer.lineWidth = 0.5
+            default:
+                // Has status, not selected/searched: normal fill
+                renderer.fillColor = uiColor(for: status).withAlphaComponent(0.45)
+                renderer.strokeColor = uiColor(for: status).withAlphaComponent(0.8)
+                renderer.lineWidth = 1.0
+            }
+        }
+
+        func uiColor(for status: TravelStatus) -> UIColor {
+            switch status {
+            case .none:        return .systemGray
+            case .wantToVisit: return UIColor(red: 0.655, green: 0.545, blue: 0.980, alpha: 1)
+            case .visited:     return UIColor(red: 0.306, green: 0.804, blue: 0.769, alpha: 1)
+            case .livedIn:     return UIColor(red: 1.0,   green: 0.820, blue: 0.400, alpha: 1)
+            }
+        }
+
+        // MARK: Refresh all overlay colours (called on status change / selection change)
+
+        func refreshOverlayColors() {
+            guard let map = mapView else { return }
+            for overlay in map.overlays {
+                guard let poly = overlay as? MKPolygon,
+                      let renderer = map.renderer(for: poly) as? MKPolygonRenderer else { continue }
+                apply(renderer: renderer, iso: poly.title ?? "")
+                renderer.invalidatePath()
+            }
         }
     }
 }
