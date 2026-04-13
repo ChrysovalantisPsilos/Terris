@@ -2,13 +2,16 @@
 //  GlobeView.swift
 //  Terris
 //
-//  MKMapView with:
-//  - MKPolygon country overlays (coloured by TravelStatus)
-//  - Small MKMarkerAnnotationView pins for visited cities (geocoded via MKLocalSearch)
+//  MKMapView with MKPolygon country overlays loaded from countries.geojson.
+//  - Every country body is filled with its TravelStatus colour.
+//  - Tapping anywhere on a country selects it (no pin needed).
+//  - The searched/selected country gets a bright white highlight fill + thick border.
+//  - Visited cities appear as small MKMarkerAnnotationView pins (geocoded once via MKLocalSearch).
 //
 
 import SwiftUI
 import MapKit
+import CoreData
 
 // MARK: - SwiftUI wrapper
 
@@ -87,11 +90,9 @@ struct GlobeView: UIViewRepresentable {
         var polygonsByISO: [String: [MKPolygon]] = [:]
         var isoByPolygon: [MKPolygon: String] = [:]
 
-        // City pin tracking: cityID → annotation already on the map
+        // City pin tracking
         var cityAnnotations: [NSManagedObjectID: CityAnnotation] = [:]
-        // Geocode cache: cityID → coordinate (avoid re-geocoding)
         var cityCoords: [NSManagedObjectID: CLLocationCoordinate2D] = [:]
-        // IDs currently being geocoded (avoid duplicate requests)
         var geocodingInFlight: Set<NSManagedObjectID> = []
 
         init(viewModel: GlobeViewModel, countries: [Country]) {
@@ -99,7 +100,7 @@ struct GlobeView: UIViewRepresentable {
             self.countries = countries
         }
 
-        // MARK: - Country polygon loading
+        // MARK: Load GeoJSON
 
         func loadPolygons() {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -141,23 +142,21 @@ struct GlobeView: UIViewRepresentable {
             }
         }
 
-        // MARK: - City pin sync
+        // MARK: City pin sync
 
         func syncCityPins(cities: [City], in map: MKMapView) {
-            let currentIDs = Set(cities.compactMap { $0.objectID })
+            let currentIDs = Set(cities.map { $0.objectID })
 
-            // Remove pins for cities that no longer qualify
-            let toRemove = cityAnnotations.filter { !currentIDs.contains($0.key) }
-            for (id, ann) in toRemove {
+            // Remove pins for cities no longer in the list
+            for (id, ann) in cityAnnotations where !currentIDs.contains(id) {
                 map.removeAnnotation(ann)
                 cityAnnotations.removeValue(forKey: id)
             }
 
-            // Add/update pins for current cities
+            // Add / update pins
             for city in cities {
                 let id = city.objectID
                 if let ann = cityAnnotations[id] {
-                    // Update status colour if changed
                     let status = TravelStatus(rawValue: city.status) ?? .none
                     if ann.status != status {
                         ann.status = status
@@ -166,7 +165,6 @@ struct GlobeView: UIViewRepresentable {
                         }
                     }
                 } else {
-                    // Pin not yet on map — geocode if needed
                     geocodeCity(city, in: map)
                 }
             }
@@ -176,22 +174,16 @@ struct GlobeView: UIViewRepresentable {
             let id = city.objectID
             guard !geocodingInFlight.contains(id) else { return }
 
-            // If we already have a cached coord, add the pin immediately
             if let coord = cityCoords[id] {
                 addCityPin(city: city, coord: coord, in: map)
                 return
             }
 
             geocodingInFlight.insert(id)
-
-            // Build search string: "CityName, CountryName"
-            let cityName = city.name ?? ""
+            let cityName    = city.name ?? ""
             let countryName = city.region?.country?.name ?? ""
-            let query = [cityName, countryName].filter { !$0.isEmpty }.joined(separator: ", ")
-            guard !query.isEmpty else {
-                geocodingInFlight.remove(id)
-                return
-            }
+            let query       = [cityName, countryName].filter { !$0.isEmpty }.joined(separator: ", ")
+            guard !query.isEmpty else { geocodingInFlight.remove(id); return }
 
             let req = MKLocalSearch.Request()
             req.naturalLanguageQuery = query
@@ -212,26 +204,22 @@ struct GlobeView: UIViewRepresentable {
             let id = city.objectID
             guard cityAnnotations[id] == nil else { return }
             let status = TravelStatus(rawValue: city.status) ?? .none
-            let ann = CityAnnotation(
-                cityName: city.name ?? "",
-                coordinate: coord,
-                status: status
-            )
+            let ann = CityAnnotation(cityName: city.name ?? "", coordinate: coord, status: status)
             cityAnnotations[id] = ann
             map.addAnnotation(ann)
         }
 
-        // MARK: - Status change
+        // MARK: Status change
 
         @objc func handleStatusChanged(_ notification: Notification) {
             refreshOverlayColors()
         }
 
-        // MARK: - Tap
+        // MARK: Tap handling
 
         @objc func handleTap(_ gr: UITapGestureRecognizer) {
             guard let map = mapView else { return }
-            let pt = gr.location(in: map)
+            let pt    = gr.location(in: map)
             let coord = map.convert(pt, toCoordinateFrom: map)
             let mapPt = MKMapPoint(coord)
 
@@ -257,7 +245,7 @@ struct GlobeView: UIViewRepresentable {
         func gestureRecognizer(_ gr: UIGestureRecognizer,
                                shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 
-        // MARK: - Annotation view
+        // MARK: Annotation view
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard let city = annotation as? CityAnnotation else { return nil }
@@ -267,7 +255,7 @@ struct GlobeView: UIViewRepresentable {
             return view
         }
 
-        // MARK: - Overlay renderer
+        // MARK: Overlay renderer
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             guard let poly = overlay as? MKPolygon else { return MKOverlayRenderer(overlay: overlay) }
@@ -276,35 +264,35 @@ struct GlobeView: UIViewRepresentable {
             return renderer
         }
 
-        // MARK: - Colour logic
+        // MARK: Colour logic
 
         func apply(renderer: MKPolygonRenderer, iso: String) {
-            let country = countries.first { $0.isoCode == iso }
-            let status = TravelStatus(rawValue: country?.status ?? 0) ?? .none
+            let country    = countries.first { $0.isoCode == iso }
+            let status     = TravelStatus(rawValue: country?.status ?? 0) ?? .none
             let isSelected = (iso == viewModel.selectedCountry?.isoCode)
             let isSearched = (iso == viewModel.searchedISOCode)
 
             switch (isSelected, isSearched, status) {
             case (true, _, _):
-                renderer.fillColor = UIColor.white.withAlphaComponent(0.35)
+                renderer.fillColor   = UIColor.white.withAlphaComponent(0.35)
                 renderer.strokeColor = UIColor.white
-                renderer.lineWidth = 2.5
+                renderer.lineWidth   = 2.5
             case (_, true, .none):
-                renderer.fillColor = UIColor.white.withAlphaComponent(0.25)
+                renderer.fillColor   = UIColor.white.withAlphaComponent(0.25)
                 renderer.strokeColor = UIColor.white.withAlphaComponent(0.9)
-                renderer.lineWidth = 2.0
+                renderer.lineWidth   = 2.0
             case (_, true, _):
-                renderer.fillColor = uiColor(for: status).withAlphaComponent(0.55)
+                renderer.fillColor   = uiColor(for: status).withAlphaComponent(0.55)
                 renderer.strokeColor = UIColor.white
-                renderer.lineWidth = 2.0
+                renderer.lineWidth   = 2.0
             case (_, _, .none):
-                renderer.fillColor = UIColor.clear
+                renderer.fillColor   = UIColor.clear
                 renderer.strokeColor = UIColor.white.withAlphaComponent(0.08)
-                renderer.lineWidth = 0.5
+                renderer.lineWidth   = 0.5
             default:
-                renderer.fillColor = uiColor(for: status).withAlphaComponent(0.45)
+                renderer.fillColor   = uiColor(for: status).withAlphaComponent(0.45)
                 renderer.strokeColor = uiColor(for: status).withAlphaComponent(0.8)
-                renderer.lineWidth = 1.0
+                renderer.lineWidth   = 1.0
             }
         }
 
@@ -329,7 +317,7 @@ struct GlobeView: UIViewRepresentable {
     }
 }
 
-// MARK: - City annotation model
+// MARK: - City annotation
 
 final class CityAnnotation: NSObject, MKAnnotation {
     let cityName: String
@@ -337,9 +325,9 @@ final class CityAnnotation: NSObject, MKAnnotation {
     var status: TravelStatus
 
     init(cityName: String, coordinate: CLLocationCoordinate2D, status: TravelStatus) {
-        self.cityName = cityName
+        self.cityName   = cityName
         self.coordinate = coordinate
-        self.status = status
+        self.status     = status
     }
 
     var title: String? { cityName }
@@ -352,37 +340,31 @@ final class CityPinView: MKMarkerAnnotationView {
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        canShowCallout = true
+        canShowCallout    = true
         animatesWhenAdded = true
-        displayPriority = .defaultLow    // auto-hidden at high altitude, visible when zoomed in
-        // Small dot style
-        glyphImage = nil
-        glyphText = "·"
+        displayPriority   = .defaultLow   // hidden at globe altitude, visible when zoomed in
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
     func applyStatus(_ status: TravelStatus) {
+        let cfg = UIImage.SymbolConfiguration(pointSize: 8, weight: .bold)
         switch status {
         case .none:
             markerTintColor = UIColor.systemGray.withAlphaComponent(0.5)
-            glyphText = "·"
-            glyphImage = nil
+            glyphImage = nil; glyphText = "·"
         case .wantToVisit:
             markerTintColor = UIColor(red: 0.655, green: 0.545, blue: 0.980, alpha: 1)
-            glyphImage = UIImage(systemName: "bookmark.fill")?.withConfiguration(
-                UIImage.SymbolConfiguration(pointSize: 8, weight: .bold))
-            glyphText = nil
+            glyphImage = UIImage(systemName: "bookmark.fill", withConfiguration: cfg)
+            glyphText  = nil
         case .visited:
             markerTintColor = UIColor(red: 0.306, green: 0.804, blue: 0.769, alpha: 1)
-            glyphImage = UIImage(systemName: "checkmark")?.withConfiguration(
-                UIImage.SymbolConfiguration(pointSize: 8, weight: .bold))
-            glyphText = nil
+            glyphImage = UIImage(systemName: "checkmark", withConfiguration: cfg)
+            glyphText  = nil
         case .livedIn:
             markerTintColor = UIColor(red: 1.0, green: 0.820, blue: 0.400, alpha: 1)
-            glyphImage = UIImage(systemName: "house.fill")?.withConfiguration(
-                UIImage.SymbolConfiguration(pointSize: 8, weight: .bold))
-            glyphText = nil
+            glyphImage = UIImage(systemName: "house.fill", withConfiguration: cfg)
+            glyphText  = nil
         }
     }
 }
@@ -393,3 +375,4 @@ extension Notification.Name {
     static let globeCountryTapped   = Notification.Name("globeCountryTapped")
     static let countryStatusChanged = Notification.Name("countryStatusChanged")
 }
+
