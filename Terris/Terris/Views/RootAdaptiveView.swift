@@ -18,6 +18,11 @@ struct RootAdaptiveView: View {
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Country.name, ascending: true)]
     ) private var countries: FetchedResults<Country>
+
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \City.name, ascending: true)],
+        predicate: NSPredicate(format: "status != 0")   // only marked cities
+    ) private var visitedCities: FetchedResults<City>
     
     @State private var showingSearch = false
     @State private var showingImport = false
@@ -166,7 +171,7 @@ struct RootAdaptiveView: View {
     // MARK: - Shared Globe Content
     
     private var globeContent: some View {
-        GlobeView(viewModel: globeVM, countries: Array(countries))
+        GlobeView(viewModel: globeVM, countries: Array(countries), cities: Array(visitedCities))
     }
     
     // MARK: - Detail Panel (iPad right column)
