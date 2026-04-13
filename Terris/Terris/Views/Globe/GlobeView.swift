@@ -2,209 +2,131 @@
 //  GlobeView.swift
 //  Terris
 //
-//  Interactive Apple Maps globe.
-//  Uses MKMapView in .globe style (iOS 16+) with custom MKMarkerAnnotationView
-//  pins coloured by TravelStatus. Tapping a pin selects the country.
+//  Interactive Apple Maps globe using SwiftUI Map with high-altitude camera.
+//  Coloured circle overlays per TravelStatus. Tap a marker to select a country.
 //
 
 import SwiftUI
 import MapKit
 import CoreData
 
-// MARK: - SwiftUI wrapper
+// MARK: - SwiftUI Map-based Globe
 
-struct GlobeView: UIViewRepresentable {
+struct GlobeView: View {
     var viewModel: GlobeViewModel
     let countries: [Country]
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(viewModel: viewModel)
-    }
-
-    func makeUIView(context: Context) -> MKMapView {
-        let map = MKMapView()
-
-        // ── Globe appearance: imagery + realistic elevation + far camera ──
-        let config = MKImageryMapConfiguration(elevationStyle: .realistic)
-        map.preferredConfiguration = config
-        map.camera = MKMapCamera(
-            lookingAtCenter: CLLocationCoordinate2D(latitude: 20, longitude: 10),
-            fromDistance: 15_000_000,
-            pitch: 0,
-            heading: 0
+    // Start with a high-altitude camera centred on Europe/Africa
+    @State private var cameraPosition: MapCameraPosition = .camera(
+        MapCamera(
+            centerCoordinate: CLLocationCoordinate2D(latitude: 20, longitude: 10),
+            distance: 15_000_000,
+            heading: 0,
+            pitch: 0
         )
+    )
 
-        // Appearance
-        map.showsCompass       = true
-        map.showsScale         = false
-        map.showsUserLocation  = false
-        map.isRotateEnabled    = true
-        map.isPitchEnabled     = false   // keep globe flat-on
-
-        map.delegate = context.coordinator
-        context.coordinator.mapView = map
-
-        // Register custom annotation view
-        map.register(CountryMarkerView.self,
-                     forAnnotationViewWithReuseIdentifier: CountryMarkerView.reuseID)
-
-        // Seed annotations
-        seedAnnotations(map: map)
-
-        return map
-    }
-
-    func updateUIView(_ map: MKMapView, context: Context) {
-        // Refresh existing annotation colours when CoreData changes
-        for ann in map.annotations.compactMap({ $0 as? CountryAnnotation }) {
-            if let country = countries.first(where: { $0.isoCode == ann.isoCode }) {
-                let newColor = viewModel.color(for: country)
-                let newStatus = TravelStatus(rawValue: country.status) ?? .none
-                if ann.markerColor != newColor {
-                    ann.markerColor = newColor
-                    ann.status = newStatus
-                    // Refresh the live view if it's visible
-                    if let view = map.view(for: ann) as? CountryMarkerView {
-                        view.refresh(color: newColor, status: newStatus)
+    var body: some View {
+        Map(position: $cameraPosition) {
+            ForEach(mapItems, id: \.isoCode) { item in
+                Annotation(item.name, coordinate: item.coordinate) {
+                    CountryPinView(item: item) {
+                        NotificationCenter.default.post(
+                            name: .globeCountryTapped,
+                            object: nil,
+                            userInfo: ["isoCode": item.isoCode]
+                        )
                     }
                 }
             }
         }
-
-        // Sync selection highlight
-        if let selected = viewModel.selectedCountry,
-           let iso = selected.isoCode,
-           let ann = viewModel.annotations[iso] {
-            let current = map.selectedAnnotations.compactMap { $0 as? CountryAnnotation }.first
-            if current?.isoCode != iso {
-                map.selectAnnotation(ann, animated: true)
-            }
-        } else if viewModel.selectedCountry == nil,
-                  let first = map.selectedAnnotations.first {
-            map.deselectAnnotation(first, animated: true)
+        .mapStyle(.hybrid(elevation: .realistic))
+        .mapControls {
+            MapCompass()
+            MapScaleView()
         }
-    }
-
-    // MARK: - Seed annotations once
-
-    private func seedAnnotations(map: MKMapView) {
-        let centroids = CountryCentroids.all
-        var annotations: [CountryAnnotation] = []
-
-        for country in countries {
-            guard let iso = country.isoCode,
-                  let (lat, lon) = centroids[iso] else { continue }
-
-            let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            let ann = CountryAnnotation(country: country,
-                                        coordinate: coord,
-                                        color: viewModel.color(for: country))
-            viewModel.annotations[iso] = ann
-            annotations.append(ann)
-        }
-        map.addAnnotations(annotations)
-    }
-}
-
-// MARK: - Coordinator / MKMapViewDelegate
-
-extension GlobeView {
-
-    final class Coordinator: NSObject, MKMapViewDelegate {
-        let viewModel: GlobeViewModel
-        weak var mapView: MKMapView?
-
-        init(viewModel: GlobeViewModel) {
-            self.viewModel = viewModel
-        }
-
-        // Provide custom annotation view
-        func mapView(_ mapView: MKMapView,
-                     viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-            guard let ann = annotation as? CountryAnnotation else { return nil }
-            let view = mapView.dequeueReusableAnnotationView(
-                withIdentifier: CountryMarkerView.reuseID,
-                for: ann) as! CountryMarkerView
-            view.configure(with: ann)
-            return view
-        }
-
-        // Tap selects country
-        func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
-            guard let ann = annotation as? CountryAnnotation else { return }
-            NotificationCenter.default.post(
-                name: .globeCountryTapped,
-                object: nil,
-                userInfo: ["isoCode": ann.isoCode]
-            )
-        }
-
-        // Tap on empty space deselects
-        func mapView(_ mapView: MKMapView, didDeselect annotation: MKAnnotation) {
-            // Only clear selection if nothing else is being selected
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                if mapView.selectedAnnotations.isEmpty {
-                    self?.viewModel.selectCountry(nil)
+        .ignoresSafeArea()
+        .onChange(of: viewModel.selectedCountry) { _, country in
+            if let country,
+               let iso = country.isoCode,
+               let (lat, lon) = CountryCentroids.all[iso] {
+                withAnimation(.easeInOut(duration: 0.8)) {
+                    cameraPosition = .camera(MapCamera(
+                        centerCoordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                        distance: 4_000_000,
+                        heading: 0,
+                        pitch: 0
+                    ))
                 }
             }
         }
+    }
 
-        // Callout accessory tap — opens detail
-        func mapView(_ mapView: MKMapView,
-                     annotationView view: MKAnnotationView,
-                     calloutAccessoryControlTapped control: UIControl) {
-            guard let ann = view.annotation as? CountryAnnotation else { return }
-            NotificationCenter.default.post(
-                name: .globeCountryTapped,
-                object: nil,
-                userInfo: ["isoCode": ann.isoCode]
+    // Build lightweight display items from CoreData objects
+    private var mapItems: [CountryMapItem] {
+        let centroids = CountryCentroids.all
+        return countries.compactMap { country in
+            guard let iso = country.isoCode,
+                  let (lat, lon) = centroids[iso] else { return nil }
+            let status = TravelStatus(rawValue: country.status) ?? .none
+            // Only show pins for marked countries (reduces clutter)
+            guard status != .none else { return nil }
+            return CountryMapItem(
+                isoCode: iso,
+                name: country.name ?? iso,
+                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                status: status
             )
         }
     }
 }
 
-// MARK: - Custom marker view
+// MARK: - Lightweight value type for map rendering
 
-final class CountryMarkerView: MKMarkerAnnotationView {
-    static let reuseID = "CountryMarker"
+struct CountryMapItem {
+    let isoCode: String
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+    let status: TravelStatus
+}
 
-    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
-        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        canShowCallout          = true
-        calloutOffset           = CGPoint(x: 0, y: -4)
-        rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
-        animatesWhenAdded       = false
-        displayPriority         = .defaultLow   // let MapKit cull dense clusters
-    }
+// MARK: - Pin view
 
-    required init?(coder: NSCoder) { fatalError() }
+struct CountryPinView: View {
+    let item: CountryMapItem
+    let onTap: () -> Void
+    @State private var isPressed = false
 
-    func configure(with ann: CountryAnnotation) {
-        refresh(color: ann.markerColor, status: ann.status)
-    }
-
-    func refresh(color: UIColor, status: TravelStatus) {
-        markerTintColor = color
-        switch status {
-        case .none:
-            glyphImage = nil
-            glyphText  = "·"
-        case .wantToVisit:
-            glyphImage = UIImage(systemName: "bookmark.fill")
-            glyphText  = nil
-        case .visited:
-            glyphImage = UIImage(systemName: "checkmark")
-            glyphText  = nil
-        case .livedIn:
-            glyphImage = UIImage(systemName: "house.fill")
-            glyphText  = nil
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 2) {
+                ZStack {
+                    Circle()
+                        .fill(item.status.color)
+                        .frame(width: 28, height: 28)
+                        .shadow(color: item.status.color.opacity(0.6), radius: 4, x: 0, y: 2)
+                    Image(systemName: item.status.icon)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                // Small country name label
+                Text(item.name)
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .lineLimit(1)
+            }
         }
-        // Unvisited pins are tiny; marked ones stand taller
-        if status == .none {
-            displayPriority = .defaultLow
-        } else {
-            displayPriority = .defaultHigh
-        }
+        .buttonStyle(.plain)
+        .scaleEffect(isPressed ? 1.2 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 

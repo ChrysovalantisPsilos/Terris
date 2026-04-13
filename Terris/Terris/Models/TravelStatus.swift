@@ -40,12 +40,5 @@ enum TravelStatus: Int16, CaseIterable, Identifiable {
         }
     }
 
-    var globeColor: UIColor {
-        switch self {
-        case .none:        return UIColor.systemGray.withAlphaComponent(0.25)
-        case .wantToVisit: return UIColor(red: 0.655, green: 0.545, blue: 0.980, alpha: 0.75)
-        case .visited:     return UIColor(red: 0.306, green: 0.804, blue: 0.769, alpha: 0.85)
-        case .livedIn:     return UIColor(red: 1.0,   green: 0.820, blue: 0.400, alpha: 0.90)
-        }
-    }
+
 }
