@@ -24,8 +24,9 @@ struct GlobeView: UIViewRepresentable {
     func makeUIView(context: Context) -> MKMapView {
         let map = MKMapView()
 
-        // ── Globe projection (iOS 16+) ──────────────────────────────────────
-        map.preferredConfiguration = MKGlobeConfiguration()
+        // ── Globe appearance: imagery + realistic elevation + far camera ──
+        let config = MKImageryMapConfiguration(elevationStyle: .realistic)
+        map.preferredConfiguration = config
         map.camera = MKMapCamera(
             lookingAtCenter: CLLocationCoordinate2D(latitude: 20, longitude: 10),
             fromDistance: 15_000_000,
@@ -36,9 +37,7 @@ struct GlobeView: UIViewRepresentable {
         // Appearance
         map.showsCompass       = true
         map.showsScale         = false
-        map.showsBuildings     = false
         map.showsUserLocation  = false
-        map.pointOfInterestFilter = .excludingAll
         map.isRotateEnabled    = true
         map.isPitchEnabled     = false   // keep globe flat-on
 
