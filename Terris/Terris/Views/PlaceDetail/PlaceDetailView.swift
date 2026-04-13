@@ -5,6 +5,8 @@
 
 import SwiftUI
 import CoreData
+import MapKit
+import CoreLocation
 
 struct PlaceDetailView: View {
     @ObservedObject var country: Country
