@@ -6,6 +6,7 @@
 //  - Every country body is filled with its TravelStatus colour.
 //  - Tapping anywhere on a country selects it (no pin needed).
 //  - The searched/selected country gets a bright white highlight fill + thick border.
+//  - Reacts instantly to status changes via countryStatusChanged notification.
 //
 
 import SwiftUI
@@ -31,7 +32,6 @@ struct GlobeView: UIViewRepresentable {
         map.delegate = context.coordinator
         context.coordinator.mapView = map
 
-        // Start at a high altitude globe-like view
         map.camera = MKMapCamera(
             lookingAtCenter: CLLocationCoordinate2D(latitude: 20, longitude: 10),
             fromDistance: 15_000_000,
@@ -39,7 +39,6 @@ struct GlobeView: UIViewRepresentable {
             heading: 0
         )
 
-        // Tap recognizer — hit-tests polygon overlays
         let tap = UITapGestureRecognizer(
             target: context.coordinator,
             action: #selector(Coordinator.handleTap(_:))
@@ -47,8 +46,14 @@ struct GlobeView: UIViewRepresentable {
         tap.delegate = context.coordinator
         map.addGestureRecognizer(tap)
 
-        // Load GeoJSON polygons on a background thread
         context.coordinator.loadPolygons()
+
+        NotificationCenter.default.addObserver(
+            context.coordinator,
+            selector: #selector(Coordinator.handleStatusChanged(_:)),
+            name: .countryStatusChanged,
+            object: nil
+        )
 
         return map
     }
@@ -57,7 +62,6 @@ struct GlobeView: UIViewRepresentable {
         context.coordinator.countries = countries
         context.coordinator.refreshOverlayColors()
 
-        // Fly to selected country
         if let iso = viewModel.selectedCountry?.isoCode,
            iso != context.coordinator.lastFlyToISO,
            let (lat, lon) = CountryCentroids.all[iso] {
@@ -77,18 +81,13 @@ struct GlobeView: UIViewRepresentable {
         var countries: [Country]
         weak var mapView: MKMapView?
         var lastFlyToISO: String? = nil
-
-        // iso → [MKPolygon] (multi-polygon countries have many rings)
         var polygonsByISO: [String: [MKPolygon]] = [:]
-        // polygon → iso (reverse lookup for tap hit-test)
         var isoByPolygon: [MKPolygon: String] = [:]
 
         init(viewModel: GlobeViewModel, countries: [Country]) {
             self.viewModel = viewModel
             self.countries = countries
         }
-
-        // MARK: Load GeoJSON
 
         func loadPolygons() {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -116,7 +115,7 @@ struct GlobeView: UIViewRepresentable {
                         } else { continue }
 
                         for poly in polys {
-                            poly.title = iso          // store ISO in title for quick lookup
+                            poly.title = iso
                             byISO[iso, default: []].append(poly)
                             byPolygon[poly] = iso
                         }
@@ -127,13 +126,14 @@ struct GlobeView: UIViewRepresentable {
                     guard let self, let map = self.mapView else { return }
                     self.polygonsByISO = byISO
                     self.isoByPolygon = byPolygon
-                    let all = Array(byPolygon.keys)
-                    map.addOverlays(all, level: .aboveRoads)
+                    map.addOverlays(Array(byPolygon.keys), level: .aboveRoads)
                 }
             }
         }
 
-        // MARK: Tap handling — hit-test all polygons
+        @objc func handleStatusChanged(_ notification: Notification) {
+            refreshOverlayColors()
+        }
 
         @objc func handleTap(_ gr: UITapGestureRecognizer) {
             guard let map = mapView else { return }
@@ -141,7 +141,6 @@ struct GlobeView: UIViewRepresentable {
             let coord = map.convert(pt, toCoordinateFrom: map)
             let mapPt = MKMapPoint(coord)
 
-            // Walk all visible overlays and find the smallest polygon that contains the tap
             var best: (iso: String, area: Double)? = nil
             for (poly, iso) in isoByPolygon {
                 let renderer = map.renderer(for: poly) as? MKPolygonRenderer
@@ -164,13 +163,10 @@ struct GlobeView: UIViewRepresentable {
             }
         }
 
-        // Allow tap gesture to coexist with map's built-in gestures
         func gestureRecognizer(
             _ gestureRecognizer: UIGestureRecognizer,
             shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
         ) -> Bool { true }
-
-        // MARK: Overlay renderer
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             guard let poly = overlay as? MKPolygon else {
@@ -180,8 +176,6 @@ struct GlobeView: UIViewRepresentable {
             apply(renderer: renderer, iso: poly.title ?? "")
             return renderer
         }
-
-        // MARK: Colour logic
 
         func apply(renderer: MKPolygonRenderer, iso: String) {
             let country = countries.first { $0.isoCode == iso }
@@ -193,27 +187,22 @@ struct GlobeView: UIViewRepresentable {
 
             switch (isSelected, isSearched, status) {
             case (true, _, _):
-                // Selected: bright white fill + thick accent border
                 renderer.fillColor = UIColor.white.withAlphaComponent(0.35)
                 renderer.strokeColor = UIColor.white
                 renderer.lineWidth = 2.5
             case (_, true, .none):
-                // Searched, unvisited: white highlight
                 renderer.fillColor = UIColor.white.withAlphaComponent(0.25)
                 renderer.strokeColor = UIColor.white.withAlphaComponent(0.9)
                 renderer.lineWidth = 2.0
             case (_, true, _):
-                // Searched + has status: status colour brightened
                 renderer.fillColor = uiColor(for: status).withAlphaComponent(0.55)
                 renderer.strokeColor = UIColor.white
                 renderer.lineWidth = 2.0
             case (_, _, .none):
-                // Unvisited: faint outline only
                 renderer.fillColor = UIColor.clear
                 renderer.strokeColor = UIColor.white.withAlphaComponent(0.08)
                 renderer.lineWidth = 0.5
             default:
-                // Has status, not selected/searched: normal fill
                 renderer.fillColor = uiColor(for: status).withAlphaComponent(0.45)
                 renderer.strokeColor = uiColor(for: status).withAlphaComponent(0.8)
                 renderer.lineWidth = 1.0
@@ -229,8 +218,6 @@ struct GlobeView: UIViewRepresentable {
             }
         }
 
-        // MARK: Refresh all overlay colours (called on status change / selection change)
-
         func refreshOverlayColors() {
             guard let map = mapView else { return }
             for overlay in map.overlays {
@@ -243,8 +230,9 @@ struct GlobeView: UIViewRepresentable {
     }
 }
 
-// MARK: - Notification name (shared)
+// MARK: - Notification names (shared)
 
 extension Notification.Name {
-    static let globeCountryTapped = Notification.Name("globeCountryTapped")
+    static let globeCountryTapped   = Notification.Name("globeCountryTapped")
+    static let countryStatusChanged = Notification.Name("countryStatusChanged")
 }

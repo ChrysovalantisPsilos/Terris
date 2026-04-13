@@ -78,6 +78,12 @@ struct PlaceDetailView: View {
                 .onChange(of: currentStatus) { _, new in
                     country.status = new.rawValue
                     try? ctx.save()
+                    // Notify globe to refresh overlay colour immediately
+                    NotificationCenter.default.post(
+                        name: .countryStatusChanged,
+                        object: nil,
+                        userInfo: ["isoCode": country.isoCode ?? ""]
+                    )
                 }
         }
         .padding(16)
@@ -143,7 +149,7 @@ struct PlaceDetailView: View {
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
         .sheet(isPresented: $showingAddRegion) {
-            AddPlaceSheet(title: "Add Region") { name in
+            AddPlaceSheet(title: "Add Region", locationHint: country.name ?? "") { name in
                 let r = Region(context: ctx)
                 r.id = UUID()
                 r.name = name
@@ -303,7 +309,10 @@ struct RegionRowView: View {
                         .padding(.top, 4)
                 }
                 .sheet(isPresented: $showAddCity) {
-                    AddPlaceSheet(title: "Add City") { name in
+                    AddPlaceSheet(
+                        title: "Add City",
+                        locationHint: [region.name, region.country?.name].compactMap { $0 }.joined(separator: ", ")
+                    ) { name in
                         let c = City(context: ctx)
                         c.id = UUID()
                         c.name = name
@@ -365,7 +374,10 @@ struct CityRowView: View {
                         .padding(.leading, 20)
                 }
                 .sheet(isPresented: $showAddAttraction) {
-                    AddPlaceSheet(title: "Add Attraction") { name in
+                    AddPlaceSheet(
+                        title: "Add Attraction",
+                        locationHint: [city.name, city.region?.country?.name].compactMap { $0 }.joined(separator: ", ")
+                    ) { name in
                         let a = Attraction(context: ctx)
                         a.id = UUID()
                         a.name = name
@@ -403,31 +415,128 @@ struct PhotoThumbnail: View {
 
 struct AddPlaceSheet: View {
     let title: String
+    /// Optional hint to scope autocomplete (e.g. country name or city name)
+    var locationHint: String = ""
     let onAdd: (String) -> Void
+
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
+    @State private var query = ""
+    @State private var suggestions: [String] = []
+    @FocusState private var focused: Bool
+    private let completer = PlaceCompleter()
 
     var body: some View {
         NavigationStack {
-            Form {
-                TextField("Name", text: $name)
+            VStack(spacing: 0) {
+                // Search field
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Search \(title.lowercased())…", text: $query)
+                        .focused($focused)
+                        .autocorrectionDisabled()
+                        .onChange(of: query) { _, newValue in
+                            completer.search(newValue, hint: locationHint) { results in
+                                suggestions = results
+                            }
+                        }
+                    if !query.isEmpty {
+                        Button { query = ""; suggestions = [] } label: {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(12)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                // Suggestions list
+                List {
+                    // Allow typing a custom name directly
+                    if !query.isEmpty {
+                        Button {
+                            commit(query)
+                        } label: {
+                            Label("Add \"\(query)\"", systemImage: "plus.circle")
+                                .font(.subheadline)
+                        }
+                    }
+                    ForEach(suggestions, id: \.self) { suggestion in
+                        Button {
+                            commit(suggestion)
+                        } label: {
+                            HStack {
+                                Image(systemName: "mappin.circle.fill")
+                                    .foregroundStyle(.tint)
+                                Text(suggestion)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                    }
+                }
+                .listStyle(.plain)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        guard !name.isEmpty else { return }
-                        onAdd(name)
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
-                }
             }
+            .onAppear { focused = true }
         }
-        .presentationDetents([.height(180)])
+        .presentationDetents([.medium, .large])
+    }
+
+    private func commit(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        onAdd(trimmed)
+        dismiss()
+    }
+}
+
+// MARK: - MKLocalSearchCompleter wrapper
+
+final class PlaceCompleter: NSObject, MKLocalSearchCompleterDelegate {
+    private let completer = MKLocalSearchCompleter()
+    private var onResults: (([String]) -> Void)?
+
+    override init() {
+        super.init()
+        completer.delegate = self
+        completer.resultTypes = [.address, .pointOfInterest]
+    }
+
+    func search(_ query: String, hint: String, completion: @escaping ([String]) -> Void) {
+        onResults = completion
+        if !hint.isEmpty {
+            completer.region = MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+                span: MKCoordinateSpan(latitudeDelta: 180, longitudeDelta: 360)
+            )
+        }
+        completer.queryFragment = query.isEmpty ? "" : (hint.isEmpty ? query : "\(query), \(hint)")
+    }
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        let names = completer.results
+            .map { r -> String in
+                // Return just the title (city/region name) without the subtitle
+                r.title
+            }
+            .filter { !$0.isEmpty }
+            // Remove duplicates while preserving order
+            .reduce(into: [String]()) { acc, s in
+                if !acc.contains(s) { acc.append(s) }
+            }
+        DispatchQueue.main.async { self.onResults?(Array(names.prefix(8))) }
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        DispatchQueue.main.async { self.onResults?([]) }
     }
 }
