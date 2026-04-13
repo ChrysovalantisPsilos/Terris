@@ -147,9 +147,6 @@ struct PhotoImportView: View {
                     .padding(.vertical, 12)
             }
             .buttonStyle(.borderedProminent)
-            .onChange(of: selectedItems) { _, items in
-                Task { await viewModel.process(items: items) }
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
