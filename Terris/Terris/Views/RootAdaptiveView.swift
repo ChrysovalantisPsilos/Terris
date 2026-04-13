@@ -47,9 +47,27 @@ struct RootAdaptiveView: View {
                 .toolbar { topBarTools }
         } content: {
             // Center globe
-            globeContent
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { globeTools }
+            ZStack(alignment: .topLeading) {
+                globeContent
+                    .ignoresSafeArea()
+                // Status legend
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(TravelStatus.allCases.filter { $0 != .none }, id: \.id) { status in
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(status.color)
+                                .frame(width: 10, height: 10)
+                            Text(status.label)
+                                .font(.caption2.weight(.medium))
+                        }
+                    }
+                }
+                .padding(10)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .padding([.leading, .top], 14)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { globeTools }
         } detail: {
             // Right detail panel
             detailPanel
@@ -74,7 +92,25 @@ struct RootAdaptiveView: View {
             NavigationStack {
                 ZStack(alignment: .bottom) {
                     globeContent
-                        .ignoresSafeArea(edges: .top)
+                        .ignoresSafeArea()
+                    // Status legend overlay (top-left)
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(TravelStatus.allCases.filter { $0 != .none }, id: \.id) { status in
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(status.color)
+                                    .frame(width: 10, height: 10)
+                                Text(status.label)
+                                    .font(.caption2.weight(.medium))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                    }
+                    .padding(10)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .padding(.leading, 12)
+                    .padding(.top, 56)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     // Bottom sheet for selected country
                     if let country = globeVM.selectedCountry {
                         BottomDetailSheet(country: country, globeVM: globeVM)
@@ -113,20 +149,7 @@ struct RootAdaptiveView: View {
     // MARK: - Shared Globe Content
 
     private var globeContent: some View {
-        ZStack {
-            // Deep space background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.04, green: 0.08, blue: 0.14),
-                    Color(red: 0.08, green: 0.12, blue: 0.22)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
-            GlobeView(viewModel: globeVM, countries: Array(countries))
-        }
+        GlobeView(viewModel: globeVM, countries: Array(countries))
     }
 
     // MARK: - Detail Panel (iPad right column)

@@ -4,7 +4,7 @@
 //
 
 import Foundation
-import SceneKit
+import MapKit
 import SwiftUI
 import CoreData
 import Observation
@@ -12,10 +12,10 @@ import Observation
 @Observable
 final class GlobeViewModel {
     var selectedCountry: Country?
-    var statusFilter: TravelStatus? = nil  // nil = show all
+    var statusFilter: TravelStatus? = nil   // nil = show all
 
-    // Map isoCode → SCNNode for fast lookup
-    var countryNodes: [String: SCNNode] = [:]
+    // Map isoCode → annotation for fast status-colour refresh
+    var annotations: [String: CountryAnnotation] = [:]
 
     func selectCountry(_ country: Country?) {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
@@ -28,25 +28,32 @@ final class GlobeViewModel {
         return status.globeColor
     }
 
-    func updateNode(for country: Country) {
+    /// Call after a country's status changes to refresh its pin colour.
+    func updateAnnotation(for country: Country) {
         guard let iso = country.isoCode,
-              let node = countryNodes[iso] else { return }
-        let color = self.color(for: country)
-        node.geometry?.firstMaterial?.diffuse.contents = color
-        // Pulse animation on status change
-        let pulse = SCNAction.sequence([
-            SCNAction.scale(to: 1.05, duration: 0.15),
-            SCNAction.scale(to: 1.0, duration: 0.15)
-        ])
-        node.runAction(pulse)
+              let ann = annotations[iso] else { return }
+        ann.markerColor = color(for: country)
+        ann.status = TravelStatus(rawValue: country.status) ?? .none
+    }
+}
+
+// MARK: - Custom annotation
+
+final class CountryAnnotation: NSObject, MKAnnotation {
+    let isoCode: String
+    let countryName: String
+    dynamic var coordinate: CLLocationCoordinate2D
+    var markerColor: UIColor
+    var status: TravelStatus
+
+    init(country: Country, coordinate: CLLocationCoordinate2D, color: UIColor) {
+        self.isoCode = country.isoCode ?? ""
+        self.countryName = country.name ?? ""
+        self.coordinate = coordinate
+        self.markerColor = color
+        self.status = TravelStatus(rawValue: country.status) ?? .none
     }
 
-    func highlightNode(isoCode: String, highlighted: Bool) {
-        guard let node = countryNodes[isoCode] else { return }
-        let scale: CGFloat = highlighted ? 1.04 : 1.0
-        SCNTransaction.begin()
-        SCNTransaction.animationDuration = 0.2
-        node.scale = SCNVector3(scale, scale, scale)
-        SCNTransaction.commit()
-    }
+    var title: String? { countryName }
+    var subtitle: String? { status.label }
 }
