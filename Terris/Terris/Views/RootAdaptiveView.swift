@@ -1,4 +1,4 @@
-//
+ //
 //  RootAdaptiveView.swift
 //  Terris
 //

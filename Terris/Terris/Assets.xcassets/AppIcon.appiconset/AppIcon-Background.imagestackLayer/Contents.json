@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "AppIcon-1024.png",
+      "filename" : "AppIcon-bg.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "AppIcon-1024-dark.png",
+      "filename" : "AppIcon-bg-dark.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,27 +25,14 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "AppIcon-1024-tinted.png",
+      "filename" : "AppIcon-bg-tinted.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
     }
   ],
-  "layers" : [
-    {
-      "filename" : "AppIcon-Background.imagestackLayer",
-      "idiom" : "universal"
-    },
-    {
-      "filename" : "AppIcon-Foreground.imagestackLayer",
-      "idiom" : "universal"
-    }
-  ],
   "info" : {
     "author" : "xcode",
     "version" : 1
-  },
-  "properties" : {
-    "pre-rendered" : true
   }
 }
