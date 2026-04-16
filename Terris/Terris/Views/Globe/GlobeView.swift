@@ -223,21 +223,20 @@ struct GlobeView: UIViewRepresentable {
             let coord = map.convert(pt, toCoordinateFrom: map)
             let mapPt = MKMapPoint(coord)
 
-            // Among all polygons containing the tap, pick the one whose
-            // centroid is closest to the tap — avoids overseas-territory confusion.
-            var best: (iso: String, dist: Double)? = nil
+            // Among all polygons that contain the tap point, pick the one with
+            // the LARGEST area. This correctly handles countries with overseas
+            // territories (France, Portugal, etc.) — the mainland polygon is
+            // always larger than any remote territory, so it wins.
+            var best: (iso: String, area: Double)? = nil
             for (poly, iso) in isoByPolygon {
                 let renderer = map.renderer(for: poly) as? MKPolygonRenderer
                     ?? MKPolygonRenderer(polygon: poly)
                 let polyPt = renderer.point(for: mapPt)
                 guard renderer.path?.contains(polyPt) == true else { continue }
 
-                // centroid of bounding rect as proxy
-                let br = poly.boundingMapRect
-                let cx = br.midX; let cy = br.midY
-                let dist = hypot(mapPt.x - cx, mapPt.y - cy)
-                if best == nil || dist < best!.dist {
-                    best = (iso, dist)
+                let area = poly.boundingMapRect.width * poly.boundingMapRect.height
+                if best == nil || area > best!.area {
+                    best = (iso, area)
                 }
             }
 

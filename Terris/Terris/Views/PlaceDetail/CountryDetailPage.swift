@@ -188,21 +188,53 @@ struct CountryDetailPage: View {
     private var photosCard: some View {
         let photos = (country.photos as? Set<TravelPhoto> ?? [])
             .sorted { ($0.takenDate ?? .distantPast) > ($1.takenDate ?? .distantPast) }
-        if !photos.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Photos (\(photos.count))", systemImage: "photo.stack")
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(photos, id: \.id) { photo in
-                            PhotoThumbnail(photo: photo)
+        return Group {
+            if !photos.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Label("Photos (\(photos.count))", systemImage: "photo.stack")
+                            .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                        Spacer()
+                        Text("Hold to delete")
+                            .font(.caption2).foregroundStyle(.tertiary)
+                    }
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(photos, id: \.id) { photo in
+                                PhotoThumbnail(photo: photo)
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            deletePhoto(photo)
+                                        } label: {
+                                            Label("Delete Photo", systemImage: "trash")
+                                        }
+                                    }
+                                    .overlay(alignment: .topTrailing) {
+                                        // Quick delete X badge
+                                        Button {
+                                            deletePhoto(photo)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 18))
+                                                .foregroundStyle(.white)
+                                                .background(Color.black.opacity(0.5), in: Circle())
+                                        }
+                                        .offset(x: 4, y: -4)
+                                    }
+                            }
                         }
+                        .padding(.vertical, 4)
                     }
                 }
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
             }
-            .padding(16)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
         }
+    }
+
+    private func deletePhoto(_ photo: TravelPhoto) {
+        ctx.delete(photo)
+        try? ctx.save()
     }
 
     private func flagEmoji(for isoCode: String) -> String {
