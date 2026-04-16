@@ -188,7 +188,7 @@ struct CountryDetailPage: View {
     private var photosCard: some View {
         let photos = (country.photos as? Set<TravelPhoto> ?? [])
             .sorted { ($0.takenDate ?? .distantPast) > ($1.takenDate ?? .distantPast) }
-        return Group {
+        Group {
             if !photos.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
