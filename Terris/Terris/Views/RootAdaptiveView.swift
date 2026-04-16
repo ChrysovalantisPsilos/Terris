@@ -37,23 +37,6 @@ struct RootAdaptiveView: View {
    }
    
    // MARK: - iPad / macOS Layout
-   
-   @AppStorage(.themeKey) private var theme: String = "dark"
-
-   private var themeIcon: String {
-       switch theme {
-       case "light": return "sun.max.fill"
-       case "dark":  return "moon.fill"
-       default:      return "circle.lefthalf.filled"
-       }
-   }
-   private func cycleTheme() {
-       switch theme {
-       case "dark":   theme = "light"
-       case "light":  theme = "system"
-       default:       theme = "dark"
-       }
-   }
 
    private var iPadLayout: some View {
        NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -67,11 +50,6 @@ struct RootAdaptiveView: View {
                        }
                        .sheet(isPresented: $showingSearch) {
                            SearchView(globeVM: globeVM)
-                       }
-                   }
-                   ToolbarItem(placement: .topBarTrailing) {
-                       Button(action: cycleTheme) {
-                           Image(systemName: themeIcon)
                        }
                    }
                }
@@ -164,12 +142,7 @@ struct RootAdaptiveView: View {
                             SearchView(globeVM: globeVM)
                         }
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: cycleTheme) {
-                            Image(systemName: themeIcon)
-                        }
-                    }
-                }
+               }
            }
            .tabItem { Label("Globe", systemImage: "globe") }
            

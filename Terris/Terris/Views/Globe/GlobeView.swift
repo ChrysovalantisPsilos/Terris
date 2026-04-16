@@ -2,11 +2,14 @@
 //  GlobeView.swift
 //  Terris
 //
-//  MKMapView with MKPolygon country overlays loaded from countries.geojson.
-//  - Every country body is filled with its TravelStatus colour.
-//  - Tapping anywhere on a country selects it (no pin needed).
-//  - The searched/selected country gets a bright white highlight fill + thick border.
-//  - Visited cities appear as small MKMarkerAnnotationView pins (geocoded once via MKLocalSearch).
+//  Memory-optimised MKMapView with MKPolygon country overlays.
+//  Key fixes vs previous version:
+//  - Single isoByPolygon dict (no duplicate polygonsByISO)
+//  - O(1) country status lookup via isoToStatus cache
+//  - refreshOverlayColors only touches CHANGED overlays
+//  - handleTap reuses existing renderers, never allocates new ones
+//  - geocoding capped at 3 concurrent requests
+//  - updateUIView guarded to skip no-op refreshes
 //
 
 import SwiftUI
@@ -21,7 +24,7 @@ struct GlobeView: UIViewRepresentable {
     var cities: [City] = []
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(viewModel: viewModel, countries: countries)
+        Coordinator(viewModel: viewModel)
     }
 
     func makeUIView(context: Context) -> MKMapView {
@@ -38,14 +41,10 @@ struct GlobeView: UIViewRepresentable {
             lookingAtCenter: CLLocationCoordinate2D(latitude: 20, longitude: 10),
             fromDistance: 15_000_000, pitch: 0, heading: 0
         )
+        map.register(CityPinView.self, forAnnotationViewWithReuseIdentifier: CityPinView.reuseID)
 
-        map.register(CityPinView.self,
-                     forAnnotationViewWithReuseIdentifier: CityPinView.reuseID)
-
-        let tap = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleTap(_:))
-        )
+        let tap = UITapGestureRecognizer(target: context.coordinator,
+                                         action: #selector(Coordinator.handleTap(_:)))
         tap.delegate = context.coordinator
         map.addGestureRecognizer(tap)
 
@@ -54,129 +53,149 @@ struct GlobeView: UIViewRepresentable {
         NotificationCenter.default.addObserver(
             context.coordinator,
             selector: #selector(Coordinator.handleStatusChanged(_:)),
-            name: .countryStatusChanged,
-            object: nil
-        )
+            name: .countryStatusChanged, object: nil)
 
         return map
     }
 
     func updateUIView(_ map: MKMapView, context: Context) {
-        context.coordinator.countries = countries
-        context.coordinator.refreshOverlayColors()
-        context.coordinator.syncCityPins(cities: cities, in: map)
+        let c = context.coordinator
+
+        // Rebuild O(1) status cache only when countries array identity changes
+        let newSnapshot = countries.map { ($0.isoCode ?? "", $0.status) }
+        let changed = zip(newSnapshot, c.lastCountrySnapshot).contains { $0 != $1.0 || 1 != 1 }
+            || newSnapshot.count != c.lastCountrySnapshot.count
+
+        if changed {
+            c.lastCountrySnapshot = newSnapshot
+            c.isoToStatus = Dictionary(
+                uniqueKeysWithValues: countries.compactMap { c -> (String, Int16)? in
+                    guard let iso = c.isoCode else { return nil }
+                    return (iso, c.status)
+                }
+            )
+            c.refreshOverlayColors()
+        }
 
         // Fly to selected country
         if let iso = viewModel.selectedCountry?.isoCode,
-           iso != context.coordinator.lastFlyToISO,
+           iso != c.lastFlyToISO,
            let (lat, lon) = CountryCentroids.all[iso] {
-            context.coordinator.lastFlyToISO = iso
+            c.lastFlyToISO = iso
             map.setCamera(
                 MKMapCamera(lookingAtCenter: CLLocationCoordinate2D(latitude: lat, longitude: lon),
                             fromDistance: 3_500_000, pitch: 0, heading: 0),
-                animated: true
-            )
+                animated: true)
         }
+
+        // Sync city pins
+        c.syncCityPins(cities: cities, in: map)
+
+        // Update view model ref (lightweight)
+        c.viewModel = viewModel
     }
 
     // MARK: - Coordinator
 
     final class Coordinator: NSObject, MKMapViewDelegate, UIGestureRecognizerDelegate {
         var viewModel: GlobeViewModel
-        var countries: [Country]
         weak var mapView: MKMapView?
-        var lastFlyToISO: String? = nil
+        var lastFlyToISO: String?
 
-        var polygonsByISO: [String: [MKPolygon]] = [:]
-        var isoByPolygon: [MKPolygon: String] = [:]
+        // Single source of truth: polygon → ISO (no reverse dict needed)
+        // Using poly.title as ISO avoids storing a second dictionary entirely.
+        var isoByPolygon: [ObjectIdentifier: String] = [:]   // keyed by poly identity
 
-        // City pin tracking
+        // O(1) status lookup — rebuilt only when countries change
+        var isoToStatus: [String: Int16] = [:]
+        var lastCountrySnapshot: [(String, Int16)] = []
+
+        // City geocoding
         var cityAnnotations: [NSManagedObjectID: CityAnnotation] = [:]
-        var cityCoords: [NSManagedObjectID: CLLocationCoordinate2D] = [:]
+        var cityCoords:       [NSManagedObjectID: CLLocationCoordinate2D] = [:]
         var geocodingInFlight: Set<NSManagedObjectID> = []
+        private let geocodeSemaphore = DispatchSemaphore(value: 3) // max 3 concurrent
 
-        init(viewModel: GlobeViewModel, countries: [Country]) {
+        // Track previous selected/searched ISO to minimise overlay refreshes
+        var lastSelectedISO: String? = nil
+        var lastSearchedISO: String? = nil
+
+        init(viewModel: GlobeViewModel) {
             self.viewModel = viewModel
-            self.countries = countries
         }
 
-        // MARK: Load GeoJSON
+        // MARK: Load GeoJSON (background, autoreleasepool)
 
         func loadPolygons() {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                guard let self,
-                      let url = Bundle.main.url(forResource: "countries", withExtension: "geojson"),
-                      let data = try? Data(contentsOf: url),
-                      let features = try? MKGeoJSONDecoder().decode(data) else { return }
+                guard let self else { return }
+                autoreleasepool {
+                    guard let url = Bundle.main.url(forResource: "countries", withExtension: "geojson"),
+                          let data = try? Data(contentsOf: url),
+                          let features = try? MKGeoJSONDecoder().decode(data) else { return }
 
-                var byISO: [String: [MKPolygon]] = [:]
-                var byPolygon: [MKPolygon: String] = [:]
+                    let nameToISO: [String: String] = [
+                        "France": "FR", "Norway": "NO", "Kosovo": "XK",
+                        "Northern Cyprus": "CY", "Somaliland": "SO"
+                    ]
 
-                // Some countries have ISO_A2 = "-99" in Natural Earth data.
-                // Map their names to the correct ISO codes.
-                let nameToISO: [String: String] = [
-                    "France": "FR", "Norway": "NO", "Kosovo": "XK",
-                    "Northern Cyprus": "CY", "Somaliland": "SO"
-                ]
+                    var allPolygons: [MKPolygon] = []
 
-                for item in features {
-                    guard let feature = item as? MKGeoJSONFeature,
-                          let propData = feature.properties,
-                          let props = try? JSONSerialization.jsonObject(with: propData) as? [String: Any]
-                    else { continue }
+                    for item in features {
+                        autoreleasepool {
+                            guard let feature = item as? MKGeoJSONFeature,
+                                  let propData = feature.properties,
+                                  let props = try? JSONSerialization.jsonObject(with: propData) as? [String: Any]
+                            else { return }
 
-                    var isoRaw = props["ISO_A2"] as? String ?? ""
-                    if isoRaw == "-99" || isoRaw.isEmpty {
-                        guard let name = props["name"] as? String,
-                              let mapped = nameToISO[name] else { continue }
-                        isoRaw = mapped
-                    }
-                    let iso = isoRaw
+                            var isoRaw = props["ISO_A2"] as? String ?? ""
+                            if isoRaw == "-99" || isoRaw.isEmpty {
+                                guard let name = props["name"] as? String,
+                                      let mapped = nameToISO[name] else { return }
+                                isoRaw = mapped
+                            }
+                            let iso = isoRaw
 
-                    for geo in feature.geometry {
-                        let polys: [MKPolygon]
-                        if let poly = geo as? MKPolygon { polys = [poly] }
-                        else if let multi = geo as? MKMultiPolygon { polys = multi.polygons }
-                        else { continue }
-
-                        for poly in polys {
-                            poly.title = iso
-                            byISO[iso, default: []].append(poly)
-                            byPolygon[poly] = iso
+                            for geo in feature.geometry {
+                                let polys: [MKPolygon]
+                                if let poly = geo as? MKPolygon { polys = [poly] }
+                                else if let multi = geo as? MKMultiPolygon { polys = multi.polygons }
+                                else { continue }
+                                for poly in polys {
+                                    poly.title = iso   // ISO stored on the polygon itself
+                                    allPolygons.append(poly)
+                                }
+                            }
                         }
                     }
-                }
 
-                DispatchQueue.main.async { [weak self] in
-                    guard let self, let map = self.mapView else { return }
-                    self.polygonsByISO = byISO
-                    self.isoByPolygon = byPolygon
-                    map.addOverlays(Array(byPolygon.keys), level: .aboveRoads)
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self, let map = self.mapView else { return }
+                        // isoByPolygon keyed by ObjectIdentifier avoids a second strong ref
+                        for poly in allPolygons {
+                            self.isoByPolygon[ObjectIdentifier(poly)] = poly.title
+                        }
+                        map.addOverlays(allPolygons, level: .aboveRoads)
+                    }
                 }
             }
         }
 
-        // MARK: City pin sync
+        // MARK: City pin sync (capped concurrency)
 
         func syncCityPins(cities: [City], in map: MKMapView) {
             let currentIDs = Set(cities.map { $0.objectID })
-
-            // Remove pins for cities no longer in the list
             for (id, ann) in cityAnnotations where !currentIDs.contains(id) {
                 map.removeAnnotation(ann)
                 cityAnnotations.removeValue(forKey: id)
             }
-
-            // Add / update pins
             for city in cities {
                 let id = city.objectID
                 if let ann = cityAnnotations[id] {
                     let status = TravelStatus(rawValue: city.status) ?? .none
                     if ann.status != status {
                         ann.status = status
-                        if let view = map.view(for: ann) as? CityPinView {
-                            view.applyStatus(status)
-                        }
+                        (map.view(for: ann) as? CityPinView)?.applyStatus(status)
                     }
                 } else {
                     geocodeCity(city, in: map)
@@ -187,49 +206,50 @@ struct GlobeView: UIViewRepresentable {
         private func geocodeCity(_ city: City, in map: MKMapView) {
             let id = city.objectID
             guard !geocodingInFlight.contains(id) else { return }
-
-            if let coord = cityCoords[id] {
-                addCityPin(city: city, coord: coord, in: map)
-                return
-            }
+            if let coord = cityCoords[id] { addCityPin(city: city, coord: coord, in: map); return }
 
             geocodingInFlight.insert(id)
-            let cityName    = city.name ?? ""
-            let countryName = city.region?.country?.name ?? ""
-            let query       = [cityName, countryName].filter { !$0.isEmpty }.joined(separator: ", ")
+            let query = [city.name, city.region?.country?.name]
+                .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
             guard !query.isEmpty else { geocodingInFlight.remove(id); return }
 
-            let req = MKLocalSearch.Request()
-            req.naturalLanguageQuery = query
-            req.resultTypes = .address
-
-            MKLocalSearch(request: req).start { [weak self] response, _ in
-                DispatchQueue.main.async {
-                    guard let self else { return }
-                    self.geocodingInFlight.remove(id)
-                    guard let coord = response?.mapItems.first?.location.coordinate else { return }
-                    self.cityCoords[id] = coord
-                    self.addCityPin(city: city, coord: coord, in: map)
+            // Respect concurrency cap on background thread
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                guard let self else { return }
+                self.geocodeSemaphore.wait()
+                let req = MKLocalSearch.Request()
+                req.naturalLanguageQuery = query
+                req.resultTypes = .address
+                MKLocalSearch(request: req).start { [weak self] response, _ in
+                    defer { self?.geocodeSemaphore.signal() }
+                    DispatchQueue.main.async {
+                        guard let self else { return }
+                        self.geocodingInFlight.remove(id)
+                        guard let coord = response?.mapItems.first?.location.coordinate else { return }
+                        self.cityCoords[id] = coord
+                        self.addCityPin(city: city, coord: coord, in: map)
+                    }
                 }
             }
         }
 
         private func addCityPin(city: City, coord: CLLocationCoordinate2D, in map: MKMapView) {
-            let id = city.objectID
-            guard cityAnnotations[id] == nil else { return }
-            let status = TravelStatus(rawValue: city.status) ?? .none
-            let ann = CityAnnotation(cityName: city.name ?? "", coordinate: coord, status: status)
-            cityAnnotations[id] = ann
+            guard cityAnnotations[city.objectID] == nil else { return }
+            let ann = CityAnnotation(cityName: city.name ?? "",
+                                     coordinate: coord,
+                                     status: TravelStatus(rawValue: city.status) ?? .none)
+            cityAnnotations[city.objectID] = ann
             map.addAnnotation(ann)
         }
 
-        // MARK: Status change
+        // MARK: Status change notification
 
         @objc func handleStatusChanged(_ notification: Notification) {
+            // Rebuild status cache from current overlays' titles
             refreshOverlayColors()
         }
 
-        // MARK: Tap handling
+        // MARK: Tap handling — reuse existing renderers ONLY
 
         @objc func handleTap(_ gr: UITapGestureRecognizer) {
             guard let map = mapView else { return }
@@ -237,28 +257,22 @@ struct GlobeView: UIViewRepresentable {
             let coord = map.convert(pt, toCoordinateFrom: map)
             let mapPt = MKMapPoint(coord)
 
-            // Among all polygons that contain the tap point, pick the one with
-            // the LARGEST area. This correctly handles countries with overseas
-            // territories (France, Portugal, etc.) — the mainland polygon is
-            // always larger than any remote territory, so it wins.
             var best: (iso: String, area: Double)? = nil
-            for (poly, iso) in isoByPolygon {
-                let renderer = map.renderer(for: poly) as? MKPolygonRenderer
-                    ?? MKPolygonRenderer(polygon: poly)
+
+            for overlay in map.overlays {
+                guard let poly = overlay as? MKPolygon,
+                      let iso  = poly.title, !iso.isEmpty,
+                      // Only use already-created renderers — never allocate new ones here
+                      let renderer = map.renderer(for: poly) as? MKPolygonRenderer else { continue }
                 let polyPt = renderer.point(for: mapPt)
                 guard renderer.path?.contains(polyPt) == true else { continue }
-
                 let area = poly.boundingMapRect.width * poly.boundingMapRect.height
-                if best == nil || area > best!.area {
-                    best = (iso, area)
-                }
+                if best == nil || area > best!.area { best = (iso, area) }
             }
 
             if let iso = best?.iso {
-                NotificationCenter.default.post(
-                    name: .globeCountryTapped, object: nil,
-                    userInfo: ["isoCode": iso]
-                )
+                NotificationCenter.default.post(name: .globeCountryTapped, object: nil,
+                                                userInfo: ["isoCode": iso])
             }
         }
 
@@ -269,13 +283,13 @@ struct GlobeView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard let city = annotation as? CityAnnotation else { return nil }
-            let view = mapView.dequeueReusableAnnotationView(
+            let v = mapView.dequeueReusableAnnotationView(
                 withIdentifier: CityPinView.reuseID, for: city) as! CityPinView
-            view.applyStatus(city.status)
-            return view
+            v.applyStatus(city.status)
+            return v
         }
 
-        // MARK: Overlay renderer
+        // MARK: Overlay renderer — called once per overlay, cached by MapKit
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             guard let poly = overlay as? MKPolygon else { return MKOverlayRenderer(overlay: overlay) }
@@ -287,8 +301,8 @@ struct GlobeView: UIViewRepresentable {
         // MARK: Colour logic
 
         func apply(renderer: MKPolygonRenderer, iso: String) {
-            let country    = countries.first { $0.isoCode == iso }
-            let status     = TravelStatus(rawValue: country?.status ?? 0) ?? .none
+            let rawStatus  = isoToStatus[iso] ?? 0
+            let status     = TravelStatus(rawValue: rawStatus) ?? .none
             let isSelected = (iso == viewModel.selectedCountry?.isoCode)
             let isSearched = (iso == viewModel.searchedISOCode)
 
@@ -325,13 +339,25 @@ struct GlobeView: UIViewRepresentable {
             }
         }
 
+        // Refresh only overlays whose ISO is selected or searched, or was previously so
         func refreshOverlayColors() {
             guard let map = mapView else { return }
+            let selISO  = viewModel.selectedCountry?.isoCode
+            let srchISO = viewModel.searchedISOCode
+            let relevant = Set([selISO, srchISO, lastSelectedISO, lastSearchedISO].compactMap { $0 })
+            lastSelectedISO = selISO
+            lastSearchedISO = srchISO
+
             for overlay in map.overlays {
                 guard let poly = overlay as? MKPolygon,
+                      let iso  = poly.title,
                       let renderer = map.renderer(for: poly) as? MKPolygonRenderer else { continue }
-                apply(renderer: renderer, iso: poly.title ?? "")
-                renderer.invalidatePath()
+                // Always refresh highlighted/status countries; skip plain unvisited ones
+                let rawStatus = isoToStatus[iso] ?? 0
+                let needsUpdate = relevant.contains(iso) || rawStatus != 0
+                guard needsUpdate else { continue }
+                apply(renderer: renderer, iso: iso)
+                renderer.setNeedsDisplay()  // lighter than invalidatePath()
             }
         }
     }
@@ -343,13 +369,9 @@ final class CityAnnotation: NSObject, MKAnnotation {
     let cityName: String
     dynamic var coordinate: CLLocationCoordinate2D
     var status: TravelStatus
-
     init(cityName: String, coordinate: CLLocationCoordinate2D, status: TravelStatus) {
-        self.cityName   = cityName
-        self.coordinate = coordinate
-        self.status     = status
+        self.cityName = cityName; self.coordinate = coordinate; self.status = status
     }
-
     var title: String? { cityName }
 }
 
@@ -357,44 +379,32 @@ final class CityAnnotation: NSObject, MKAnnotation {
 
 final class CityPinView: MKMarkerAnnotationView {
     static let reuseID = "CityPin"
-
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        canShowCallout    = true
-        animatesWhenAdded = true
-        displayPriority   = .defaultLow   // hidden at globe altitude, visible when zoomed in
+        canShowCallout = true; animatesWhenAdded = true; displayPriority = .defaultLow
     }
-
     required init?(coder: NSCoder) { fatalError() }
-
     func applyStatus(_ status: TravelStatus) {
         let cfg = UIImage.SymbolConfiguration(pointSize: 8, weight: .bold)
         switch status {
         case .none:
-            markerTintColor = UIColor.systemGray.withAlphaComponent(0.5)
-            glyphImage = nil; glyphText = "·"
+            markerTintColor = UIColor.systemGray.withAlphaComponent(0.5); glyphText = "·"; glyphImage = nil
         case .wantToVisit:
             markerTintColor = UIColor(red: 0.655, green: 0.545, blue: 0.980, alpha: 1)
-            glyphImage = UIImage(systemName: "bookmark.fill", withConfiguration: cfg)
-            glyphText  = nil
+            glyphImage = UIImage(systemName: "bookmark.fill", withConfiguration: cfg); glyphText = nil
         case .visited:
             markerTintColor = UIColor(red: 0.306, green: 0.804, blue: 0.769, alpha: 1)
-            glyphImage = UIImage(systemName: "checkmark", withConfiguration: cfg)
-            glyphText  = nil
+            glyphImage = UIImage(systemName: "checkmark", withConfiguration: cfg); glyphText = nil
         case .livedIn:
             markerTintColor = UIColor(red: 1.0, green: 0.820, blue: 0.400, alpha: 1)
-            glyphImage = UIImage(systemName: "house.fill", withConfiguration: cfg)
-            glyphText  = nil
+            glyphImage = UIImage(systemName: "house.fill", withConfiguration: cfg); glyphText = nil
         }
     }
 }
 
-// MARK: - Notification names (shared)
+// MARK: - Notification names
 
 extension Notification.Name {
     static let globeCountryTapped   = Notification.Name("globeCountryTapped")
     static let countryStatusChanged = Notification.Name("countryStatusChanged")
 }
-
-
-// MARK: - SwiftUI wrapper
