@@ -112,12 +112,26 @@ struct GlobeView: UIViewRepresentable {
                 var byISO: [String: [MKPolygon]] = [:]
                 var byPolygon: [MKPolygon: String] = [:]
 
+                // Some countries have ISO_A2 = "-99" in Natural Earth data.
+                // Map their names to the correct ISO codes.
+                let nameToISO: [String: String] = [
+                    "France": "FR", "Norway": "NO", "Kosovo": "XK",
+                    "Northern Cyprus": "CY", "Somaliland": "SO"
+                ]
+
                 for item in features {
                     guard let feature = item as? MKGeoJSONFeature,
                           let propData = feature.properties,
-                          let props = try? JSONSerialization.jsonObject(with: propData) as? [String: Any],
-                          let iso = props["ISO_A2"] as? String,
-                          iso != "-99", iso != "" else { continue }
+                          let props = try? JSONSerialization.jsonObject(with: propData) as? [String: Any]
+                    else { continue }
+
+                    var isoRaw = props["ISO_A2"] as? String ?? ""
+                    if isoRaw == "-99" || isoRaw.isEmpty {
+                        guard let name = props["name"] as? String,
+                              let mapped = nameToISO[name] else { continue }
+                        isoRaw = mapped
+                    }
+                    let iso = isoRaw
 
                     for geo in feature.geometry {
                         let polys: [MKPolygon]
@@ -193,7 +207,7 @@ struct GlobeView: UIViewRepresentable {
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.geocodingInFlight.remove(id)
-                    guard let coord = response?.mapItems.first?.location.coordinate else { return }
+                    guard let coord = response?.mapItems.first?.placemark.coordinate else { return }
                     self.cityCoords[id] = coord
                     self.addCityPin(city: city, coord: coord, in: map)
                 }
