@@ -193,7 +193,7 @@ struct GlobeView: UIViewRepresentable {
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.geocodingInFlight.remove(id)
-                    guard let coord = response?.mapItems.first?.location?.coordinate else { return }
+                    guard let coord = response?.mapItems.first?.location.coordinate else { return }
                     self.cityCoords[id] = coord
                     self.addCityPin(city: city, coord: coord, in: map)
                 }
