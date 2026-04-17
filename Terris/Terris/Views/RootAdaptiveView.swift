@@ -34,7 +34,7 @@ struct RootAdaptiveView: View {
    ) private var flights: FetchedResults<Flight>
    
    @State private var showingSearch = false
-   @State private var showingImport = false
+   
    @State private var columnVisibility = NavigationSplitViewVisibility.all
    
    var body: some View {
@@ -91,10 +91,6 @@ struct RootAdaptiveView: View {
            .toolbar {
                ToolbarItem(placement: .topBarTrailing) {
                    HStack(spacing: 16) {
-                       Button { showingImport = true } label: {
-                           Label("Import", systemImage: "photo.badge.plus")
-                       }
-                       .sheet(isPresented: $showingImport) { PhotoImportView() }
                        NavigationLink {
                            FlightTrackerView()
                        } label: {
@@ -190,9 +186,6 @@ struct RootAdaptiveView: View {
            NavigationStack { StatsDashboardView() }
                .tabItem { Label("Stats", systemImage: "chart.pie.fill") }
 
-           // Import tab
-           NavigationStack { PhotoImportView() }
-               .tabItem { Label("Import", systemImage: "photo.badge.plus") }
        }
        .onReceive(NotificationCenter.default.publisher(for: .globeCountryTapped)) { note in
            if let iso = note.userInfo?["isoCode"] as? String {
