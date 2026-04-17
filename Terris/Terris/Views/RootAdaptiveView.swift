@@ -14,6 +14,11 @@ struct RootAdaptiveView: View {
    @State private var globeVM = GlobeViewModel()
    @Environment(\.managedObjectContext) private var ctx
    @Environment(\.horizontalSizeClass) private var hSizeClass
+   @AppStorage("mapAppearance") private var mapAppearanceRaw: String = MapAppearance.hybridFlyover.rawValue
+
+   private var mapAppearance: MapAppearance {
+       MapAppearance(rawValue: mapAppearanceRaw) ?? .hybridFlyover
+   }
    
    @FetchRequest(
        sortDescriptors: [NSSortDescriptor(keyPath: \Country.name, ascending: true)]
@@ -56,7 +61,7 @@ struct RootAdaptiveView: View {
        } content: {
            ZStack(alignment: .topLeading) {
                globeContent.ignoresSafeArea()
-               // Status legend
+               // Status legend top-left
                VStack(alignment: .leading, spacing: 5) {
                    ForEach(TravelStatus.allCases.filter { $0 != .none }, id: \.id) { status in
                        HStack(spacing: 6) {
@@ -68,6 +73,15 @@ struct RootAdaptiveView: View {
                .padding(10)
                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                .padding([.leading, .top], 14)
+               // Map style picker — bottom trailing
+               VStack {
+                   Spacer()
+                   HStack {
+                       Spacer()
+                       mapStylePicker
+                           .padding(14)
+                   }
+               }
            }
            .navigationBarTitleDisplayMode(.inline)
            .toolbar {
@@ -127,6 +141,16 @@ struct RootAdaptiveView: View {
                    .padding(.leading, 12)
                    .padding(.top, 56)
                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                   // Map style picker bottom-right
+                   VStack {
+                       Spacer()
+                       HStack {
+                           Spacer()
+                           mapStylePicker.padding(14)
+                       }
+                       // leave space for bottom sheet
+                       if globeVM.selectedCountry != nil { Color.clear.frame(height: 100) }
+                   }
                    // Bottom sheet for selected country
                    if let country = globeVM.selectedCountry {
                        BottomDetailSheet(country: country, globeVM: globeVM)
@@ -169,9 +193,33 @@ struct RootAdaptiveView: View {
    }
    
    // MARK: - Shared Globe Content
-   
+
    private var globeContent: some View {
-       GlobeView(viewModel: globeVM, countries: Array(countries), cities: Array(visitedCities))
+       GlobeView(viewModel: globeVM,
+                 countries: Array(countries),
+                 cities: Array(visitedCities),
+                 mapAppearance: mapAppearance)
+   }
+
+   // MARK: - Map Style Picker Button
+
+   private var mapStylePicker: some View {
+       Menu {
+           ForEach(MapAppearance.allCases, id: \.rawValue) { style in
+               Button {
+                   mapAppearanceRaw = style.rawValue
+               } label: {
+                   Label(style.rawValue, systemImage: style.icon)
+               }
+               .disabled(style.rawValue == mapAppearanceRaw)
+           }
+       } label: {
+           Image(systemName: mapAppearance.icon)
+               .font(.system(size: 14, weight: .semibold))
+               .foregroundStyle(.primary)
+               .frame(width: 36, height: 36)
+               .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+       }
    }
    
    // MARK: - Detail Panel (iPad right column)
