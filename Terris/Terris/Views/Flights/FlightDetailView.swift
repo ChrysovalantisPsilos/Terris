@@ -242,7 +242,7 @@ struct FlightDetailView: View {
             FlightDetailCell(icon: "crown.fill", label: "Class", value: flight.seatClass ?? "Economy", color: seatClassColor)
             FlightDetailCell(icon: "calendar", label: "Date", value: dateText)
             FlightDetailCell(icon: "clock.fill", label: "Duration", value: durationText)
-            FlightDetailCell(icon: "arrow.left.right", label: "Distance", value: distanceText)
+            FlightDetailCell(icon: "arrow.left.and.right", label: "Distance", value: distanceText)
             FlightDetailCell(icon: "star.fill", label: "Rating", value: ratingText, color: .yellow)
         }
         .padding(.horizontal, 16)

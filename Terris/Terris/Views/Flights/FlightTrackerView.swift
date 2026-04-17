@@ -118,7 +118,7 @@ struct FlightTrackerView: View {
             HStack(spacing: 12) {
                 FlightStatPill(value: "\(uniqueAirports)", label: "Airports", icon: "building.columns.fill", color: .blue)
                 FlightStatPill(value: "\(uniqueCountries)", label: "Countries", icon: "globe", color: .green)
-                FlightStatPill(value: String(format: "%.0f", totalKm), label: "km flown", icon: "arrow.left.right", color: .orange)
+                FlightStatPill(value: String(format: "%.0f", totalKm), label: "km flown", icon: "arrow.left.and.right", color: .orange)
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
