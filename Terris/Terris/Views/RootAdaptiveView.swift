@@ -26,8 +26,12 @@ struct RootAdaptiveView: View {
 
    @FetchRequest(
        sortDescriptors: [NSSortDescriptor(keyPath: \City.name, ascending: true)],
-       predicate: NSPredicate(format: "status != 0")   // only marked cities
+       predicate: NSPredicate(format: "status != 0")
    ) private var visitedCities: FetchedResults<City>
+
+   @FetchRequest(
+       sortDescriptors: [NSSortDescriptor(keyPath: \Flight.departureDate, ascending: false)]
+   ) private var flights: FetchedResults<Flight>
    
    @State private var showingSearch = false
    @State private var showingImport = false
@@ -92,6 +96,11 @@ struct RootAdaptiveView: View {
                        }
                        .sheet(isPresented: $showingImport) { PhotoImportView() }
                        NavigationLink {
+                           FlightTrackerView()
+                       } label: {
+                           Label("Flights", systemImage: "airplane")
+                       }
+                       NavigationLink {
                            TripTimelineView()
                        } label: {
                            Label("Timeline", systemImage: "clock.fill")
@@ -148,7 +157,6 @@ struct RootAdaptiveView: View {
                            Spacer()
                            mapStylePicker.padding(14)
                        }
-                       // leave space for bottom sheet
                        if globeVM.selectedCountry != nil { Color.clear.frame(height: 100) }
                    }
                    // Bottom sheet for selected country
@@ -169,15 +177,19 @@ struct RootAdaptiveView: View {
                }
            }
            .tabItem { Label("Globe", systemImage: "globe") }
-           
+
+           // Flights tab
+           NavigationStack { FlightTrackerView() }
+               .tabItem { Label("Flights", systemImage: "airplane") }
+
            // Timeline tab
            NavigationStack { TripTimelineView() }
                .tabItem { Label("Timeline", systemImage: "clock.fill") }
-           
+
            // Stats tab
            NavigationStack { StatsDashboardView() }
                .tabItem { Label("Stats", systemImage: "chart.pie.fill") }
-           
+
            // Import tab
            NavigationStack { PhotoImportView() }
                .tabItem { Label("Import", systemImage: "photo.badge.plus") }
@@ -198,6 +210,7 @@ struct RootAdaptiveView: View {
        GlobeView(viewModel: globeVM,
                  countries: Array(countries),
                  cities: Array(visitedCities),
+                 flights: Array(flights),
                  mapAppearance: mapAppearance)
    }
 

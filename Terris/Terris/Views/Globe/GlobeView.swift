@@ -46,6 +46,7 @@ struct GlobeView: UIViewRepresentable {
     var viewModel: GlobeViewModel
     let countries: [Country]
     var cities: [City] = []
+    var flights: [Flight] = []
     var mapAppearance: MapAppearance = .hybridFlyover
 
     func makeCoordinator() -> Coordinator {
@@ -96,6 +97,7 @@ struct GlobeView: UIViewRepresentable {
         context.coordinator.countries = countries
         context.coordinator.refreshOverlayColors()
         context.coordinator.syncCityPins(cities: cities, in: map)
+        context.coordinator.syncFlightArcs(flights: flights, in: map)
 
         // Fly to selected country — zoom distance adapts to country bounding rect
         if let iso = viewModel.selectedCountry?.isoCode,
@@ -142,6 +144,7 @@ struct GlobeView: UIViewRepresentable {
 
         // City pin tracking
         var cityAnnotations: [NSManagedObjectID: CityAnnotation] = [:]
+        var flightArcs: [ObjectIdentifier: MKGeodesicPolyline] = [:]
         var cityCoords: [NSManagedObjectID: CLLocationCoordinate2D] = [:]
         var geocodingInFlight: Set<NSManagedObjectID> = []
 
@@ -207,6 +210,33 @@ struct GlobeView: UIViewRepresentable {
         }
 
         // MARK: City pin sync
+
+        // MARK: - Flight arcs
+
+        func syncFlightArcs(flights: [Flight], in map: MKMapView) {
+            let currentIDs = Set(flights.map { ObjectIdentifier($0) })
+
+            // Remove arcs for deleted flights
+            for (id, arc) in flightArcs where !currentIDs.contains(id) {
+                map.removeOverlay(arc)
+                flightArcs.removeValue(forKey: id)
+            }
+
+            // Add arcs for new flights
+            for flight in flights {
+                let id = ObjectIdentifier(flight)
+                guard flightArcs[id] == nil else { continue }
+                guard let dep = flight.departureAirport,
+                      let arr = flight.arrivalAirport else { continue }
+                var coords = [
+                    CLLocationCoordinate2D(latitude: dep.latitude, longitude: dep.longitude),
+                    CLLocationCoordinate2D(latitude: arr.latitude, longitude: arr.longitude)
+                ]
+                let arc = MKGeodesicPolyline(coordinates: &coords, count: 2)
+                flightArcs[id] = arc
+                map.addOverlay(arc, level: .aboveLabels)
+            }
+        }
 
         func syncCityPins(cities: [City], in map: MKMapView) {
             let currentIDs = Set(cities.map { $0.objectID })
@@ -328,6 +358,13 @@ struct GlobeView: UIViewRepresentable {
         // MARK: Overlay renderer
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let geodesic = overlay as? MKGeodesicPolyline {
+                let r = MKPolylineRenderer(polyline: geodesic)
+                r.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+                r.lineWidth = 1.8
+                r.lineDashPattern = [5, 4]
+                return r
+            }
             guard let poly = overlay as? MKPolygon else { return MKOverlayRenderer(overlay: overlay) }
             let renderer = MKPolygonRenderer(polygon: poly)
             apply(renderer: renderer, iso: poly.title ?? "")

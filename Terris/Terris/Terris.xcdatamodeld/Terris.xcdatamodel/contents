@@ -76,6 +76,33 @@
         <relationship name="countries" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Country" inverseName="trips" inverseEntity="Country"/>
         <relationship name="photos" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TravelPhoto" inverseName="trip" inverseEntity="TravelPhoto"/>
     </entity>
+    <entity name="Airport" representedClassName="Airport" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="iata" optional="YES" attributeType="String"/>
+        <attribute name="icao" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="city" optional="YES" attributeType="String"/>
+        <attribute name="countryISO" optional="YES" attributeType="String"/>
+        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="departureFlights" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Flight" inverseName="departureAirport" inverseEntity="Flight"/>
+        <relationship name="arrivalFlights" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Flight" inverseName="arrivalAirport" inverseEntity="Flight"/>
+    </entity>
+    <entity name="Flight" representedClassName="Flight" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="flightNumber" optional="YES" attributeType="String"/>
+        <attribute name="airline" optional="YES" attributeType="String"/>
+        <attribute name="departureDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="arrivalDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="seatNumber" optional="YES" attributeType="String"/>
+        <attribute name="seatClass" optional="YES" attributeType="String"/>
+        <attribute name="distanceKm" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="status" optional="YES" attributeType="String" defaultValueString="completed"/>
+        <attribute name="rating" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="departureAirport" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Airport" inverseName="departureFlights" inverseEntity="Airport"/>
+        <relationship name="arrivalAirport" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Airport" inverseName="arrivalFlights" inverseEntity="Airport"/>
+    </entity>
     <elements>
         <element name="Country" positionX="0" positionY="0" width="128" height="224"/>
         <element name="Region" positionX="200" positionY="0" width="128" height="149"/>
@@ -83,5 +110,7 @@
         <element name="Attraction" positionX="600" positionY="0" width="128" height="149"/>
         <element name="TravelPhoto" positionX="200" positionY="250" width="128" height="194"/>
         <element name="Trip" positionX="0" positionY="250" width="128" height="149"/>
+        <element name="Airport" positionX="400" positionY="250" width="128" height="149"/>
+        <element name="Flight" positionX="600" positionY="250" width="128" height="149"/>
     </elements>
 </model>
