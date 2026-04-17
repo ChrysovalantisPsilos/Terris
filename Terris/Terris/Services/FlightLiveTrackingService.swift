@@ -71,7 +71,8 @@ final class FlightLiveTrackingService {
     // Position history for trail
     var positionHistory: [CLLocationCoordinate2D] = []
 
-    private var callsign: String = ""
+    private var callsign: String = ""      // ICAO callsign (converted)
+    private var originalInput: String = "" // original as entered by user
     private var timer: AnyCancellable?
     private let session: URLSession
 
@@ -82,13 +83,117 @@ final class FlightLiveTrackingService {
         session = URLSession(configuration: config)
     }
 
+    // MARK: - IATA → ICAO airline code mapping
+    // OpenSky uses ICAO callsigns (e.g. AEE127), not IATA (e.g. A3127)
+    private static let iataToIcao: [String: String] = [
+        "A3": "AEE", // Aegean Airlines
+        "AA": "AAL", // American Airlines
+        "AB": "BER", // Air Berlin
+        "AC": "ACA", // Air Canada
+        "AF": "AFR", // Air France
+        "AY": "FIN", // Finnair
+        "AZ": "AZA", // ITA Airways
+        "BA": "BAW", // British Airways
+        "BT": "BTI", // airBaltic
+        "CA": "CCA", // Air China
+        "CI": "CAL", // China Airlines
+        "CX": "CPA", // Cathay Pacific
+        "DE": "CFG", // Condor
+        "DL": "DAL", // Delta Air Lines
+        "EI": "EIN", // Aer Lingus
+        "EK": "UAE", // Emirates
+        "ET": "ETH", // Ethiopian Airlines
+        "EW": "EWG", // Eurowings
+        "EY": "ETD", // Etihad Airways
+        "FI": "ICE", // Icelandair
+        "FR": "RYR", // Ryanair
+        "G3": "GLO", // Gol Linhas Aéreas
+        "GF": "GFA", // Gulf Air
+        "HA": "HAL", // Hawaiian Airlines
+        "HV": "TRA", // Transavia
+        "IB": "IBE", // Iberia
+        "JL": "JAL", // Japan Airlines
+        "JP": "ADR", // Adria Airways
+        "JQ": "JST", // Jetstar
+        "KE": "KAL", // Korean Air
+        "KL": "KLM", // KLM
+        "LA": "LAN", // LATAM
+        "LH": "DLH", // Lufthansa
+        "LO": "LOT", // LOT Polish Airlines
+        "LX": "SWR", // Swiss
+        "LY": "ELY", // El Al
+        "MH": "MAS", // Malaysia Airlines
+        "MS": "MSR", // EgyptAir
+        "MU": "CES", // China Eastern
+        "NH": "ANA", // All Nippon Airways
+        "NZ": "ANZ", // Air New Zealand
+        "OK": "CSA", // Czech Airlines
+        "OS": "AUA", // Austrian Airlines
+        "OZ": "AAR", // Asiana Airlines
+        "PC": "PGT", // Pegasus Airlines
+        "PK": "PIA", // Pakistan International Airlines
+        "PS": "AUI", // Ukraine International Airlines
+        "QF": "QFA", // Qantas
+        "QR": "QTR", // Qatar Airways
+        "RO": "ROT", // TAROM
+        "S7": "SBI", // S7 Airlines
+        "SK": "SAS", // Scandinavian Airlines
+        "SN": "BEL", // Brussels Airlines
+        "SQ": "SIA", // Singapore Airlines
+        "SU": "AFL", // Aeroflot
+        "SV": "SVA", // Saudia
+        "TG": "THA", // Thai Airways
+        "TK": "THY", // Turkish Airlines
+        "TP": "TAP", // TAP Air Portugal
+        "TU": "TAR", // Tunisair
+        "U2": "EZY", // easyJet
+        "UA": "UAL", // United Airlines
+        "UL": "ALK", // SriLankan Airlines
+        "UN": "TSO", // Transaero
+        "US": "USA", // US Airways
+        "UX": "AEA", // Air Europa
+        "VN": "HVN", // Vietnam Airlines
+        "VS": "VIR", // Virgin Atlantic
+        "VY": "VLG", // Vueling
+        "W6": "WZZ", // Wizz Air
+        "WN": "SWA", // Southwest Airlines
+        "WS": "WJA", // WestJet
+        "X3": "TUI", // TUI fly
+        "XQ": "SXS", // SunExpress
+        "ZI": "AAF", // Aigle Azur
+    ]
+
+    /// Convert IATA flight number (e.g. "A3127") to ICAO callsign (e.g. "AEE127")
+    private func toIcaoCallsign(_ input: String) -> String {
+        let upper = input.uppercased().replacingOccurrences(of: " ", with: "")
+
+        // Try 2-char IATA prefix first
+        if upper.count >= 3 {
+            let prefix2 = String(upper.prefix(2))
+            if let icao = Self.iataToIcao[prefix2] {
+                let number = String(upper.dropFirst(2))
+                return icao + number
+            }
+        }
+
+        // Try 1-char prefix (some carriers use single letter like "B" for Belavia)
+        let prefix1 = String(upper.prefix(1))
+        if let icao = Self.iataToIcao[prefix1] {
+            let number = String(upper.dropFirst(1))
+            return icao + number
+        }
+
+        // Already ICAO format or unknown — use as-is
+        return upper
+    }
+
     // MARK: - Start / Stop
 
     func startTracking(flightNumber: String) {
-        // Clean callsign: uppercase, pad to 8 chars for ICAO format
-        let raw = flightNumber.uppercased()
-            .replacingOccurrences(of: " ", with: "")
-        callsign = raw
+        let raw = flightNumber.uppercased().replacingOccurrences(of: " ", with: "")
+        originalInput = raw
+        // Convert IATA → ICAO callsign for OpenSky
+        callsign = toIcaoCallsign(raw)
 
         isTracking = true
         error = nil
@@ -159,10 +264,11 @@ final class FlightLiveTrackingService {
                 return
             }
 
-            // Find matching callsign (trimmed)
+            // Find matching callsign (trimmed) — try ICAO and original IATA
             let match = states.first { vec in
                 guard let cs = vec[1] as? String else { return false }
-                return cs.trimmingCharacters(in: .whitespaces).uppercased() == callsign
+                let trimmed = cs.trimmingCharacters(in: .whitespaces).uppercased()
+                return trimmed == callsign || trimmed == originalInput
             }
 
             if let stateVec = match, let state = parseState(stateVec) {
