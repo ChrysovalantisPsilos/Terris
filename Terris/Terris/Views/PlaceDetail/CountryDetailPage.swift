@@ -152,7 +152,7 @@ struct CountryDetailPage: View {
                                     .frame(width: geo.size.width, height: 320).clipped()
                             default:
                                 fallbackGradient.overlay(
-                                    phase == .empty ? AnyView(ProgressView().tint(.white)) : AnyView(EmptyView())
+                                    ProgressView().tint(.white)
                                 )
                             }
                         }
@@ -507,7 +507,7 @@ struct CountryDetailPage: View {
             let exif = EXIFReader.read(from: data)
             let photo = TravelPhoto(context: ctx)
             photo.id = UUID(); photo.imageData = data
-            photo.takenDate = exif.dateTaken
+            photo.takenDate = exif.takenDate
             photo.latitude = exif.latitude ?? 0; photo.longitude = exif.longitude ?? 0
             photo.country = country
             try? ctx.save()
