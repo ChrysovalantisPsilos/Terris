@@ -210,11 +210,24 @@ struct FlightRowCard: View {
 
     private var dep: Airport? { flight.departureAirport }
     private var arr: Airport? { flight.arrivalAirport }
+    // Is currently airborne?
+    private var isLive: Bool {
+        guard let dep = flight.departureDate, let arr = flight.arrivalDate else { return false }
+        let now = Date()
+        return now >= dep && now <= arr
+    }
+    private var isUpcoming: Bool {
+        guard let dep = flight.departureDate else { return false }
+        let diff = dep.timeIntervalSinceNow
+        return diff > 0 && diff < 86400
+    }
+
     private var statusColor: Color {
+        if isLive { return .green }
         switch flight.status {
         case "upcoming": return .blue
         case "cancelled": return .red
-        default: return .green
+        default: return .secondary
         }
     }
     private var durationText: String {
@@ -297,20 +310,35 @@ struct FlightRowCard: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer()
-                if let cls = flight.seatClass, !cls.isEmpty {
-                    Text(cls)
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(seatClassColor(cls).opacity(0.15), in: Capsule())
-                        .foregroundStyle(seatClassColor(cls))
+                if isLive {
+                    LiveBadge()
+                } else if isUpcoming {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock.fill")
+                            .font(.caption2)
+                        Text("Departing soon")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.blue.opacity(0.1), in: Capsule())
+                } else {
+                    if let cls = flight.seatClass, !cls.isEmpty {
+                        Text(cls)
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(seatClassColor(cls).opacity(0.15), in: Capsule())
+                            .foregroundStyle(seatClassColor(cls))
+                    }
+                    Circle()
+                        .fill(statusColor)
+                        .frame(width: 7, height: 7)
+                    Text((flight.status ?? "completed").capitalized)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(statusColor)
                 }
-                Circle()
-                    .fill(statusColor)
-                    .frame(width: 7, height: 7)
-                Text((flight.status ?? "completed").capitalized)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(statusColor)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
