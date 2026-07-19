@@ -8,21 +8,6 @@ struct FlightDetailView: View {
     @Environment(\.managedObjectContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @State private var showEdit = false
-    @State private var showLiveTracking = false
-
-    // Is the flight currently in the air?
-    private var isLive: Bool {
-        guard let dep = flight.departureDate, let arr = flight.arrivalDate else { return false }
-        let now = Date()
-        return now >= dep && now <= arr
-    }
-
-    // Is the flight upcoming (within 24h)?
-    private var isUpcoming: Bool {
-        guard let dep = flight.departureDate else { return false }
-        let diff = dep.timeIntervalSinceNow
-        return diff > 0 && diff < 86400
-    }
 
     private var dep: Airport? { flight.departureAirport }
     private var arr: Airport? { flight.arrivalAirport }
@@ -45,10 +30,6 @@ struct FlightDetailView: View {
         ScrollView {
             VStack(spacing: 20) {
                 routeHero
-                // Live tracking banner
-                if isLive || isUpcoming {
-                    liveTrackingBanner
-                }
                 arcMap
                 detailGrid
                 if let notes = flight.notes, !notes.isEmpty {
@@ -63,12 +44,6 @@ struct FlightDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    if isLive || isUpcoming {
-                        Button { showLiveTracking = true } label: {
-                            Label("Track Live", systemImage: "antenna.radiowaves.left.and.right")
-                        }
-                        Divider()
-                    }
                     Button { showEdit = true } label: { Label("Edit", systemImage: "pencil") }
                     Divider()
                     Button(role: .destructive) {
@@ -84,55 +59,6 @@ struct FlightDetailView: View {
         .sheet(isPresented: $showEdit) {
             Text("Edit coming soon").padding()
         }
-        .fullScreenCover(isPresented: $showLiveTracking) {
-            NavigationStack {
-                LiveFlightTrackingView(flight: flight)
-            }
-        }
-    }
-
-    // MARK: - Live Tracking Banner
-
-    private var liveTrackingBanner: some View {
-        Button { showLiveTracking = true } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(isLive ? Color.green.opacity(0.2) : Color.blue.opacity(0.2))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: isLive ? "antenna.radiowaves.left.and.right" : "clock.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(isLive ? .green : .blue)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(isLive ? "Flight is in the air!" : "Departing soon")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.primary)
-                    Text(isLive ? "Tap to track live position" : "Live tracking available at departure")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if isLive {
-                    LiveBadge()
-                }
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isLive ? Color.green.opacity(0.08) : Color.blue.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(isLive ? Color.green.opacity(0.3) : Color.blue.opacity(0.3), lineWidth: 1)
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 16)
     }
 
     // MARK: - Route Hero
