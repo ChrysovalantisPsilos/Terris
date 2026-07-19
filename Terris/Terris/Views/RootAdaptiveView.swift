@@ -96,11 +96,6 @@ struct RootAdaptiveView: View {
                            Label("Flights", systemImage: "airplane")
                        }
                        NavigationLink {
-                           TripTimelineView()
-                       } label: {
-                           Label("Timeline", systemImage: "clock.fill")
-                       }
-                       NavigationLink {
                            StatsDashboardView()
                        } label: {
                            Label("Stats", systemImage: "chart.pie.fill")
@@ -176,10 +171,6 @@ struct RootAdaptiveView: View {
            // Flights tab
            NavigationStack { FlightTrackerView() }
                .tabItem { Label("Flights", systemImage: "airplane") }
-
-           // Timeline tab
-           NavigationStack { TripTimelineView() }
-               .tabItem { Label("Timeline", systemImage: "clock.fill") }
 
            // Stats tab
            NavigationStack { StatsDashboardView() }

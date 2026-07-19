@@ -69,7 +69,6 @@ struct PersistenceController {
             c.continent = entry.continent
             c.status = TravelStatus.none.rawValue
             c.rating = 0
-            c.completionPercent = 0
         }
         try? ctx.save()
     }

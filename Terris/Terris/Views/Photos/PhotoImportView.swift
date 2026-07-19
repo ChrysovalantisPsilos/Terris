@@ -318,3 +318,14 @@ struct ProcessedPhotoRow: View {
         .padding(.vertical, 6)
     }
 }
+
+// MARK: - Section Header (relocated from removed TripTimelineView)
+
+struct SectionHeader: View {
+    let title: String
+    var body: some View {
+        Text(title)
+            .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+            .padding(.horizontal, 16).padding(.bottom, 6)
+    }
+}
