@@ -461,7 +461,7 @@ struct CountryDetailPage: View {
 
     private var photosTab: some View {
         VStack(alignment: .leading, spacing: 16) {
-            PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images) {
+            PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images, photoLibrary: .shared()) {
                 HStack {
                     Image(systemName: "photo.badge.plus.fill").font(.title3).foregroundStyle(.white)
                     Text("Import Photos").font(.subheadline.weight(.bold)).foregroundStyle(.white)
@@ -506,7 +506,9 @@ struct CountryDetailPage: View {
                   let _ = UIImage(data: data) else { continue }
             let exif = EXIFReader.read(from: data)
             let photo = TravelPhoto(context: ctx)
-            photo.id = UUID(); photo.imageData = data
+            photo.id = UUID()
+            // Reference-only: store the PHAsset identifier, never the blob.
+            photo.assetIdentifier = item.itemIdentifier
             photo.takenDate = exif.takenDate
             photo.latitude = exif.latitude ?? 0; photo.longitude = exif.longitude ?? 0
             photo.country = country
@@ -674,15 +676,11 @@ struct PhotoGridCell: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            if let data = photo.imageData, let img = UIImage(data: data) {
-                Image(uiImage: img).resizable().scaledToFill()
-                    .frame(width: 100, height: 100).clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                RoundedRectangle(cornerRadius: 8).fill(Color(.systemFill))
-                    .frame(width: 100, height: 100)
-                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
-            }
+            AssetImage(assetIdentifier: photo.assetIdentifier,
+                       legacyData: photo.imageData,
+                       targetSize: CGSize(width: 100, height: 100))
+                .frame(width: 100, height: 100).clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             Button(action: onDelete) {
                 Image(systemName: "xmark.circle.fill").font(.system(size: 18))
                     .foregroundStyle(.white).background(Color.black.opacity(0.45), in: Circle())

@@ -11,6 +11,7 @@ import Observation
 struct PhotoSuggestion: Identifiable {
     let id = UUID()
     let image: UIImage
+    let assetIdentifier: String?      // PHAsset local identifier (reference-only storage)
     let exifResult: EXIFResult
     var geoMatch: GeoMatchingService.GeoMatch?
     var matchedCountry: Country?
@@ -38,7 +39,9 @@ final class PhotoImportViewModel {
             guard let data = try? await item.loadTransferable(type: Data.self),
                   let image = UIImage(data: data) else { continue }
             let exif = EXIFReader.read(from: data)
-            var suggestion = PhotoSuggestion(image: image, exifResult: exif)
+            var suggestion = PhotoSuggestion(image: image,
+                                             assetIdentifier: item.itemIdentifier,
+                                             exifResult: exif)
 
             if let lat = exif.latitude, let lon = exif.longitude {
                 let match = await GeoMatchingService.shared.match(latitude: lat, longitude: lon)
@@ -58,11 +61,11 @@ final class PhotoImportViewModel {
     func confirm(suggestionID: UUID) {
         guard let idx = suggestions.firstIndex(where: { $0.id == suggestionID }) else { return }
         let s = suggestions[idx]
-        guard let imageData = s.image.jpegData(compressionQuality: 0.8) else { return }
 
         let photo = TravelPhoto(context: ctx)
         photo.id = UUID()
-        photo.imageData = imageData
+        // Reference-only: store the PHAsset identifier, never the image blob.
+        photo.assetIdentifier = s.assetIdentifier
         photo.takenDate = s.exifResult.takenDate
         photo.latitude = s.exifResult.latitude ?? 0
         photo.longitude = s.exifResult.longitude ?? 0
@@ -117,7 +120,7 @@ struct PhotoImportView: View {
                 // Only show re-import button after suggestions are loaded
                 if !viewModel.suggestions.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
-                        PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images) {
+                        PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images, photoLibrary: .shared()) {
                             Image(systemName: "photo.badge.plus")
                         }
                         .onChange(of: selectedItems) { _, items in
@@ -143,7 +146,7 @@ struct PhotoImportView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-            PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images) {
+            PhotosPicker(selection: $selectedItems, maxSelectionCount: 50, matching: .images, photoLibrary: .shared()) {
                 Label("Select Photos", systemImage: "photo.badge.plus")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 24)

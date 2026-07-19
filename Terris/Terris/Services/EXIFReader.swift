@@ -38,7 +38,14 @@ struct EXIFReader {
         var takenDate: Date? = nil
         if let exif = meta[kCGImagePropertyExifDictionary as String] as? [String: Any],
            let dateStr = exif[kCGImagePropertyExifDateTimeOriginal as String] as? String {
+            // EXIF DateTimeOriginal is camera wall-clock with no timezone.
+            // Interpret it in a FIXED zone (UTC) + POSIX locale so the parsed
+            // instant is deterministic and doesn't shift with the device's
+            // current timezone. We only ever read the calendar day from this,
+            // so a stable interpretation matters more than a "true" UTC moment.
             let fmt = DateFormatter()
+            fmt.locale = Locale(identifier: "en_US_POSIX")
+            fmt.timeZone = TimeZone(secondsFromGMT: 0)
             fmt.dateFormat = "yyyy:MM:dd HH:mm:ss"
             takenDate = fmt.date(from: dateStr)
         }
