@@ -14,10 +14,13 @@ struct RootAdaptiveView: View {
    @State private var globeVM = GlobeViewModel()
    @Environment(\.managedObjectContext) private var ctx
    @Environment(\.horizontalSizeClass) private var hSizeClass
-   @AppStorage("mapAppearance") private var mapAppearanceRaw: String = MapAppearance.hybridFlyover.rawValue
+   // Default to the flat muted base: the hero screen exists to show which
+   // countries are shaded, and satellite imagery buries that. Satellite 3D
+   // remains available via the style picker.
+   @AppStorage("mapAppearance") private var mapAppearanceRaw: String = MapAppearance.mutedStandard.rawValue
 
    private var mapAppearance: MapAppearance {
-       MapAppearance(rawValue: mapAppearanceRaw) ?? .hybridFlyover
+       MapAppearance(rawValue: mapAppearanceRaw) ?? .mutedStandard
    }
    
    @FetchRequest(

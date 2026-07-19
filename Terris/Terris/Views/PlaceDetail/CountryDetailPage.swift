@@ -328,7 +328,29 @@ struct CountryDetailPage: View {
     private var overviewTab: some View {
         VStack(spacing: 16) {
             if currentStatus != .none { datesCard }
+            funFactsCard
             notesCard
+        }
+    }
+
+    @ViewBuilder
+    private var funFactsCard: some View {
+        let facts = CountryFacts.facts(for: country.isoCode)
+        if !facts.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Did You Know?", systemImage: "lightbulb.fill")
+                    .font(.subheadline.weight(.semibold))
+                ForEach(Array(facts.enumerated()), id: \.offset) { _, fact in
+                    HStack(alignment: .top, spacing: 10) {
+                        Circle().fill(Color.accentColor.opacity(0.6))
+                            .frame(width: 5, height: 5).padding(.top, 7)
+                        Text(fact).font(.subheadline).foregroundStyle(.primary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
     }
 
