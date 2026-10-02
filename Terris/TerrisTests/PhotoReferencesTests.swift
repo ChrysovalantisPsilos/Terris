@@ -6,6 +6,7 @@
 //  cloud form, and old local references being swapped without doubling.
 //
 
+import CoreData
 import Foundation
 import Testing
 @testable import Terris
