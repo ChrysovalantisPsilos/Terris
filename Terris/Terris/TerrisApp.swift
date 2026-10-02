@@ -35,7 +35,9 @@ struct TerrisApp: App {
                 }
             }
             .task {
-                try? await Task.sleep(for: .seconds(1.2))
+                // Long enough for the animated mark; brief with Reduce Motion.
+                let wait = UIAccessibility.isReduceMotionEnabled ? 0.6 : LaunchScreenView.duration
+                try? await Task.sleep(for: .seconds(wait))
                 withAnimation(.easeInOut(duration: 0.4)) { isLaunching = false }
             }
         }

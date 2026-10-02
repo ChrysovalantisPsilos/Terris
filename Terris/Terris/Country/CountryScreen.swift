@@ -11,7 +11,11 @@ import SwiftUI
 struct CountryScreen: View {
     @Environment(FootprintStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model: CountryModel
+    /// The mini globe pulses when the status changes.
+    @State private var effects = MapEffects.none
     @State private var notes = ""
     @State private var newCity = ""
     @FocusState private var notesFocused: Bool
@@ -55,6 +59,10 @@ struct CountryScreen: View {
             if !notesFocused { notes = model.figures?.notes ?? "" }
         }
         .onDisappear { model.setNotes(notes) }
+        .onChange(of: model.figures?.status) { old, new in
+            guard old != nil, old != new, motionEnabled, !reduceMotion else { return }
+            effects.pulses = [model.iso: .now]
+        }
     }
 
     // MARK: Sections
@@ -70,7 +78,8 @@ struct CountryScreen: View {
             Spacer(minLength: 0)
             if let centroid = WorldShapes.shared.centroid(of: f.iso) {
                 GlobeMap(statusByISO: [f.iso: f.status == .none ? .visited : f.status],
-                         center: .constant(centroid), highlightISO: f.iso, interactive: false)
+                         center: .constant(centroid), highlightISO: f.iso, interactive: false,
+                         effects: effects)
                     .frame(width: 112, height: 112)
                     .accessibilityHidden(true)
             }
@@ -184,6 +193,9 @@ struct StatusPicker: View {
     let status: TravelStatus
     let onTap: (TravelStatus) -> Void
 
+    /// The selection pill slides from option to option.
+    @Namespace private var pill
+
     var body: some View {
         HStack(spacing: 4) {
             ForEach(TravelStatus.pickable) { option in
@@ -197,6 +209,7 @@ struct StatusPicker: View {
                             if selected {
                                 Capsule().fill(Theme.card)
                                     .shadow(color: .black.opacity(0.08), radius: 4, y: 1)
+                                    .matchedGeometryEffect(id: "pill", in: pill)
                             }
                         }
                         .contentShape(Capsule())
@@ -209,7 +222,7 @@ struct StatusPicker: View {
         .padding(4)
         .background(Theme.subtle, in: Capsule())
         .sensoryFeedback(.selection, trigger: status)
-        .animation(Theme.spring, value: status)
+        .animation(Motion.spring, value: status)
     }
 }
 

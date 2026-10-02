@@ -37,6 +37,10 @@ struct FlightScreen: View {
     @State private var model: FlightModel
     @State private var editing: FlightDraft?
     @State private var confirmingDelete = false
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The arc draws, then the plane glides along it once.
+    @State private var effects = MapEffects.none
 
     init(id: UUID, store: FootprintStore) {
         _model = State(initialValue: FlightModel(id: id, store: store))
@@ -112,8 +116,11 @@ struct FlightScreen: View {
                 end(f.to, city: f.toCity, time: f.arrival, alignment: .trailing)
             }
             if let route = Self.route(f) {
-                FlatMap(statusByISO: model.statusByISO, routes: [route])
+                FlatMap(statusByISO: model.statusByISO, planeRoute: route, effects: effects)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .onAppear {
+                        if motionEnabled && !reduceMotion { effects.routeStart = .now }
+                    }
             }
         }
         .card()

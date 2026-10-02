@@ -58,11 +58,14 @@ Terris/
     Persistence.swift        NSPersistentCloudKitContainer (in-memory under tests)
     Terris.xcdatamodeld      v2: Country ⇢ City, TravelPhoto, Airport, Flight
     App/                     RootView (Map · Flights · Search tabs, iPad sidebar,
-                             first-launch scan), AppRouter, MapLayout, LaunchScreenView
+                             first-launch scan and tour), AppRouter, MapLayout, LaunchScreenView
     Data/FootprintStore      the only Core Data reads/writes for the footprint
-    Theme/                   tokens (Theme), Liquid Glass helpers (Glass)
+    Theme/                   tokens (Theme), Liquid Glass helpers (Glass), Motion
+                             (springs, easing, reveal, GlobeCamera, MapEffects),
+                             BrandMark (the Summit Flag as animatable shapes)
     Geo/                     Projection (orthographic, Equal Earth), WorldShapes
                              (countries.geojson), GlobeMap / FlatMap canvases
+                             (fill-in, pulses, drawing routes, the plane)
     Map/                     MapFigures (pure), MapModel, MapScreen (Globe, Journal,
                              Atlas layouts), MapComponents
     Country/                 CountryFigures + CountryModel, CountryScreen (sheet)
@@ -71,6 +74,8 @@ Terris/
                              FlightDraft + AirportSearch (pure), FlightsScreen (tab),
                              FlightFormScreen (log / edit, inline airport pick),
                              FlightScreen (one flight)
+    Guide/                   TourScreen (five cards, once after first launch),
+                             GuideScreen ("How Terris works", the ? on the Map)
     Onboarding/              PhotoScanner (PHAsset locations, offline), ScanTally
                              (pure), ScanScreen (first launch and the scan button)
     Models/                  static data: CountryData (the country list and the
@@ -78,9 +83,11 @@ Terris/
                              TravelStatus, CountryFacts
     Services/                OfflineCountryResolver (nonisolated, used off-main by the
                              scan), AssetImage (PHAsset thumbnails)
-    Assets.xcassets          AppIcon (light, dark, tinted), BrandLockup, AccentColor
+    Resources/Fonts          Outfit-Bold (the wordmark only; OFL in docs/brand)
+    Assets.xcassets          AppIcon (light, dark, tinted), AccentColor
   TerrisTests/               Swift Testing: projections, figures, country, search,
-                             shapes, flights, scan tally
+                             shapes, flights, scan tally, motion; snapshots
+                             (XCTest, motion off)
 docs/brand/                  logo masters (SVG), brand sheet, README
 .github/workflows/ios-app.yml   macOS CI: build, unit tests, snapshots by hand
 ```

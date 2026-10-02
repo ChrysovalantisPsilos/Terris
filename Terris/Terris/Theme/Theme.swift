@@ -36,11 +36,20 @@ enum Theme {
 
     static let accent = visited
 
+    // The Summit Flag's grid and pole (the mark, launch screen).
+    static let markGrid = dynamic(light: 0x155A68, dark: 0x2A8394)
+    static let markPole = dynamic(light: 0x17212B, dark: 0xF7F5F0)
+
     // MARK: Shape and motion
 
     static let cardRadius: CGFloat = 22
     static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
-    static let spring = Animation.spring(response: 0.38, dampingFraction: 0.86)
+    static let spring = Motion.spring
+
+    // MARK: Type
+
+    /// The "Terris" wordmark (Outfit Bold, bundled); everything else is the system font.
+    static let wordmark = Font.custom("Outfit-Bold", size: 44, relativeTo: .largeTitle)
 
     // MARK: Helpers
 

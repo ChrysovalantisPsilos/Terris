@@ -64,6 +64,10 @@ struct ScanScreen: View {
     @Environment(\.openURL) private var openURL
     @State private var model: ScanModel
     @State private var center = GeoPoint(lon: 15, lat: 30)
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Each newly found country pops on the globe.
+    @State private var effects = MapEffects.none
     /// Called when the flow ends, whether the user added results or skipped.
     private let onFinish: () -> Void
 
@@ -77,7 +81,8 @@ struct ScanScreen: View {
     var body: some View {
         VStack(spacing: 20) {
             header
-            GlobeMap(statusByISO: model.statusByISO, center: $center, interactive: model.phase != .scanning)
+            GlobeMap(statusByISO: model.statusByISO, center: $center, interactive: model.phase != .scanning,
+                     effects: effects)
                 .padding(.horizontal, 24)
                 .frame(maxHeight: .infinity)
             footer
@@ -94,6 +99,13 @@ struct ScanScreen: View {
             }
         }
         .onDisappear { model.cancel() }
+        .onChange(of: model.tally.foundOrder) { old, new in
+            guard motionEnabled, !reduceMotion, new.count > old.count else { return }
+            let now = Date.now
+            var pulses = effects.pulses.filter { now.timeIntervalSince($0.value) < MapEffects.pulseDuration }
+            for iso in new.dropFirst(old.count) { pulses[iso] = now }
+            effects.pulses = pulses
+        }
     }
 
     // MARK: Header

@@ -33,6 +33,8 @@ targets:
       properties:
         # CloudKit pushes changes from other devices as silent notifications.
         UIBackgroundModes: [remote-notification]
+        # The wordmark's font (OFL, licence in docs/brand/Outfit-OFL.txt).
+        UIAppFonts: [Outfit-Bold.ttf]
     entitlements:
       path: Terris/Terris.entitlements
       properties:

@@ -20,6 +20,7 @@ final class SnapshotTests: XCTestCase {
 
     override func setUp() async throws {
         UserDefaults.standard.set(true, forKey: "hasOnboarded")
+        UserDefaults.standard.set(true, forKey: "hasSeenTour")
     }
 
     // MARK: Map
@@ -94,6 +95,23 @@ final class SnapshotTests: XCTestCase {
         try await shot(fixture.dress(SearchScreen()), name: "search", dark: false)
     }
 
+    // MARK: Guide
+
+    func testTourSnapshots() async throws {
+        let fixture = Fixture.empty()
+        for card in TourCard.allCases {
+            try await shot(fixture.dress(TourScreen(startingAt: card)), name: "tour-\(card.rawValue + 1)", dark: false)
+        }
+        try await shot(fixture.dress(TourScreen()), name: "tour-1", dark: true)
+    }
+
+    func testGuideSnapshots() async throws {
+        let fixture = Fixture.empty()
+        for dark in [false, true] {
+            try await shot(fixture.dress(GuideScreen()), name: "guide", dark: dark)
+        }
+    }
+
     // MARK: Scan and launch
 
     func testScanSnapshots() async throws {
@@ -110,7 +128,7 @@ final class SnapshotTests: XCTestCase {
 
     func testLaunchSnapshots() async throws {
         for dark in [false, true] {
-            try await shot(LaunchScreenView(), name: "launch", dark: dark, settle: 1.2)
+            try await shot(LaunchScreenView().environment(\.motionEnabled, false), name: "launch", dark: dark, settle: 1.2)
         }
     }
 
@@ -164,6 +182,8 @@ private struct Fixture {
             .environment(store)
             .environment(router)
             .environment(\.managedObjectContext, persistence.container.viewContext)
+            // Final, still states: no fills, spins or reveals mid-flight.
+            .environment(\.motionEnabled, false)
     }
 
     static func empty() -> Fixture {

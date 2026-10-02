@@ -35,6 +35,11 @@ struct FlightsScreen: View {
     @State private var model: FlightsModel?
     @State private var adding = false
     @State private var open: OpenFlight?
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Routes draw themselves the first time the tab shows.
+    @State private var effects = MapEffects.none
+    @State private var drewRoutes = false
 
     var body: some View {
         NavigationStack {
@@ -75,8 +80,13 @@ struct FlightsScreen: View {
                     Spacer()
                     total(Text("\(f.airports)"), f.airports == 1 ? Text("airport") : Text("airports"))
                 }
-                FlatMap(statusByISO: model.statusByISO, routes: f.routes)
+                FlatMap(statusByISO: model.statusByISO, routes: f.routes, effects: effects)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .onAppear {
+                        guard !drewRoutes, !f.routes.isEmpty else { return }
+                        drewRoutes = true
+                        if motionEnabled && !reduceMotion { effects.routeStart = .now }
+                    }
                 if f.km > 0 {
                     Text("That's \(f.timesAroundEarth, format: .number.precision(.fractionLength(1)))× around the Earth.")
                         .font(.footnote).foregroundStyle(Theme.muted)

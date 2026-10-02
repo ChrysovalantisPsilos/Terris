@@ -14,19 +14,31 @@ struct WorldRing: View {
     var size: CGFloat = 56
     var lineWidth: CGFloat = 6
 
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var grown = false
+
     var body: some View {
+        let animate = motionEnabled && !reduceMotion
+        // Sweeps up from empty the first time it shows.
+        let shown = grown || !animate ? fraction : 0
         ZStack {
             Circle().stroke(Theme.subtle, lineWidth: lineWidth)
             Circle()
-                .trim(from: 0, to: max(fraction, 0.005))
+                .trim(from: 0, to: max(shown, 0.005))
                 .stroke(Theme.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Text("\(percent)%")
                 .font(.system(size: size * 0.24, weight: .bold).monospacedDigit())
                 .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText(value: Double(percent)))
         }
         .frame(width: size, height: size)
         .animation(Theme.spring, value: fraction)
+        .onAppear {
+            guard animate, !grown else { return }
+            withAnimation(Motion.gentle.delay(0.15)) { grown = true }
+        }
         .accessibilityElement()
         .accessibilityLabel(Text("\(percent) percent of the world"))
     }
@@ -85,7 +97,7 @@ struct ContinentGrid: View {
 
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-            ForEach(continents) { c in
+            ForEach(Array(continents.enumerated()), id: \.element.id) { index, c in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(c.name).font(.caption).foregroundStyle(Theme.muted).lineLimit(1)
                         .minimumScaleFactor(0.8)
@@ -97,6 +109,7 @@ struct ContinentGrid: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.subtle, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .accessibilityElement(children: .combine)
+                .reveal(index)
             }
         }
     }
@@ -120,6 +133,7 @@ struct ContinentRows: View {
                 }
                 .padding(.vertical, 12)
                 .accessibilityElement(children: .combine)
+                .reveal(index)
                 if index < continents.count - 1 { Divider() }
             }
         }
@@ -130,16 +144,27 @@ struct ContinentRows: View {
 struct ProgressBar: View {
     let fraction: Double
 
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var grown = false
+
     var body: some View {
+        let animate = motionEnabled && !reduceMotion
+        // Grows in from the left the first time it shows.
+        let shown = grown || !animate ? fraction : 0
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.subtle)
                 Capsule().fill(Theme.accent)
-                    .frame(width: max(geo.size.width * fraction, fraction > 0 ? 6 : 0))
+                    .frame(width: max(geo.size.width * shown, shown > 0 ? 6 : 0))
             }
         }
         .frame(height: 6)
         .animation(Theme.spring, value: fraction)
+        .onAppear {
+            guard animate, !grown else { return }
+            withAnimation(Motion.gentle.delay(0.2)) { grown = true }
+        }
     }
 }
 
@@ -191,6 +216,7 @@ struct CountryListCard: View {
         VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
                 CountryListRow(row: row, subtitle: Self.subtitle(row)) { onSelect(row.iso) }
+                    .reveal(index)
                 if index < rows.count - 1 { Divider().padding(.leading, 44) }
             }
         }

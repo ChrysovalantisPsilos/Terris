@@ -15,7 +15,11 @@ struct MapScreen: View {
     @Environment(FootprintStore.self) private var store
     @Environment(AppRouter.self) private var router
     @AppStorage("mapLayout") private var layout: MapLayout = .globe
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model: MapModel?
+    @State private var effects = MapEffects.none
+    @State private var showingGuide = false
 
     var body: some View {
         NavigationStack {
@@ -32,22 +36,50 @@ struct MapScreen: View {
             .navigationBarTitleDisplayMode(layout == .journal ? .large : .inline)
         }
         .task(id: store.version) {
+            let firstLoad = model == nil
             if model == nil { model = MapModel(store: store) }
+            let before = model?.figures.statusByISO ?? [:]
             withAnimation(Theme.spring) { model?.load() }
+            guard motionEnabled, !reduceMotion, let after = model?.figures.statusByISO else { return }
+            if firstLoad {
+                // The marked countries fill in, west to east, on first show.
+                effects.fillStart = .now
+            } else {
+                // Countries that just changed (marked on their page, or added
+                // by a scan) pulse once.
+                let now = Date.now
+                let changed = MapEffects.changed(from: before, to: after)
+                guard !changed.isEmpty else { return }
+                effects.pulses = effects.pulses.filter { now.timeIntervalSince($0.value) < MapEffects.pulseDuration }
+                for iso in changed { effects.pulses[iso] = now }
+            }
         }
+        .sheet(isPresented: $showingGuide) { GuideScreen() }
     }
 
     @ViewBuilder
     private func content(_ figures: MapFigures) -> some View {
-        switch layout {
-        case .globe: GlobeLayout(figures: figures, onSelect: { router.open($0) }, onScan: { scan() })
-        case .journal: JournalLayout(figures: figures, onSelect: { router.open($0) }, onScan: { scan() })
-        case .atlas: AtlasLayout(figures: figures, onSelect: { router.open($0) }, onScan: { scan() })
+        Group {
+            switch layout {
+            case .globe:
+                GlobeLayout(figures: figures, effects: effects, onSelect: { router.open($0) }, onScan: { scan() })
+            case .journal:
+                JournalLayout(figures: figures, effects: effects, onSelect: { router.open($0) }, onScan: { scan() })
+            case .atlas:
+                AtlasLayout(figures: figures, effects: effects, onSelect: { router.open($0) }, onScan: { scan() })
+            }
         }
+        .id(layout)
+        .transition(.opacity.combined(with: .scale(scale: 0.985)))
     }
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { showingGuide = true } label: {
+                Label("How Terris works", systemImage: "questionmark.circle")
+            }
+        }
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button(action: scan) {
                 Label("Find countries in my photos", systemImage: "photo.badge.magnifyingglass")
@@ -73,11 +105,19 @@ struct MapScreen: View {
 
 private struct GlobeLayout: View {
     let figures: MapFigures
+    let effects: MapEffects
     let onSelect: (String) -> Void
     let onScan: () -> Void
 
-    @State private var center = GeoPoint(lon: 15, lat: 30)
+    @Environment(\.motionEnabled) private var motionEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Where the globe rests: Europe and Africa in view.
+    private static let home = GeoPoint(lon: 15, lat: 30)
+    @State private var camera = GlobeCamera(center: GlobeLayout.home)
+    @State private var didIntro = false
     @State private var expanded = false
+
+    private var animate: Bool { motionEnabled && !reduceMotion }
 
     private let collapsedHeight: CGFloat = 300
 
@@ -85,7 +125,13 @@ private struct GlobeLayout: View {
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
                 Color.clear.frame(height: 96)
-                GlobeMap(statusByISO: figures.statusByISO, center: $center, onSelect: onSelect)
+                GlobeMap(statusByISO: figures.statusByISO,
+                         center: Binding(get: { camera.center }, set: { camera.set($0) }),
+                         effects: effects,
+                         onSelect: { select($0) },
+                         onFling: { target in
+                             camera.turn(to: target, duration: 0.9, animated: animate, curve: Motion.easeOutCubic)
+                         })
                     .padding(.horizontal, 12)
                     .frame(maxHeight: .infinity)
                 Color.clear.frame(height: collapsedHeight - 24)
@@ -127,6 +173,28 @@ private struct GlobeLayout: View {
                 .padding(.bottom, 24)
             }
         }
+        .onAppear {
+            // A short spin into place the first time the globe shows.
+            guard !didIntro else { return }
+            didIntro = true
+            guard animate else { return }
+            camera.set(GeoPoint(lon: Self.home.lon - 70, lat: Self.home.lat - 10))
+            camera.turn(to: Self.home, duration: 1.4, animated: true)
+        }
+    }
+
+    /// Turns the globe to centre the tapped country, then opens it.
+    private func select(_ iso: String) {
+        guard animate, let target = WorldShapes.shared.centroid(of: iso) else {
+            onSelect(iso)
+            return
+        }
+        let turn = camera.turn(to: GeoPoint(lon: target.lon, lat: min(max(target.lat, -60), 60)),
+                               duration: 0.45, animated: true)
+        Task {
+            await turn.value
+            onSelect(iso)
+        }
     }
 }
 
@@ -157,9 +225,11 @@ struct PullUpPanel<Content: View>: View {
                         DragGesture()
                             .updating($drag) { value, state, _ in state = value.translation.height }
                             .onEnded { value in
-                                withAnimation(Theme.spring) {
-                                    if value.translation.height < -40 { expanded = true }
-                                    if value.translation.height > 40 { expanded = false }
+                                // Where the flick would carry it decides, not just how far it moved.
+                                let travel = value.predictedEndTranslation.height
+                                withAnimation(Motion.spring) {
+                                    if travel < -60 { expanded = true }
+                                    if travel > 60 { expanded = false }
                                 }
                             })
                     .accessibilityAddTraits(.isButton)
@@ -185,6 +255,7 @@ struct PullUpPanel<Content: View>: View {
 
 private struct JournalLayout: View {
     let figures: MapFigures
+    let effects: MapEffects
     let onSelect: (String) -> Void
     let onScan: () -> Void
 
@@ -206,7 +277,7 @@ private struct JournalLayout: View {
                         Spacer()
                         WorldRing(fraction: figures.fraction, percent: figures.percent, size: 92, lineWidth: 10)
                     }
-                    FlatMap(statusByISO: figures.statusByISO, onSelect: onSelect)
+                    FlatMap(statusByISO: figures.statusByISO, effects: effects, onSelect: onSelect)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     StatusLegend(figures: figures)
                 }
@@ -236,6 +307,7 @@ private struct JournalLayout: View {
 
 private struct AtlasLayout: View {
     let figures: MapFigures
+    let effects: MapEffects
     let onSelect: (String) -> Void
     let onScan: () -> Void
 
@@ -244,7 +316,7 @@ private struct AtlasLayout: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            FlatMap(statusByISO: figures.statusByISO, onSelect: onSelect)
+            FlatMap(statusByISO: figures.statusByISO, effects: effects, onSelect: onSelect)
                 .padding(.bottom, 20)
 
             VStack(alignment: .leading, spacing: 14) {
