@@ -82,7 +82,9 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           umask 077
-          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc_key.p8"
+          # Rebuild the PEM (a pasted key can lose its line breaks or gain \r):
+          # the API scripts tolerate that, xcodebuild doesn't.
+          node --input-type=module -e "import { normalisePem } from './scripts/asc/api.mjs'; process.stdout.write(normalisePem(process.env.ASC_KEY_P8))" > "$RUNNER_TEMP/asc_key.p8"
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -91,7 +93,7 @@ jobs:
             <key>method</key><string>app-store-connect</string>
             <key>destination</key><string>upload</string>
             <key>signingStyle</key><string>automatic</string>
-            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>teamID</key><string>$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')</string>
             <key>uploadSymbols</key><true/>
             <key>manageAppVersionAndBuildNumber</key><false/>
           </dict>
@@ -111,33 +113,39 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: >
-          set -o pipefail &&
-          xcodebuild archive
-          -project "$PROJECT" -scheme "$SCHEME" -configuration Release
-          -destination "generic/platform=iOS"
-          -archivePath "$RUNNER_TEMP/Terris.xcarchive" -derivedDataPath "$DERIVED"
-          -allowProvisioningUpdates
-          -authenticationKeyPath "$RUNNER_TEMP/asc_key.p8"
-          -authenticationKeyID "$ASC_KEY_ID"
-          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
-          DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
-          CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+        run: |
+          set -o pipefail
+          # Stray spaces or newlines in a pasted secret break xcodebuild's sign-in.
+          KEY_ID=$(printf '%s' "$ASC_KEY_ID" | tr -d '[:space:]')
+          ISSUER_ID=$(printf '%s' "$ASC_ISSUER_ID" | tr -d '[:space:]')
+          TEAM_ID=$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')
+          xcodebuild archive \
+            -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/Terris.xcarchive" -derivedDataPath "$DERIVED" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc_key.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
           | tee archive.log | grep -E "error:|warning: .*Terris/|ARCHIVE|\*\*"
       - name: Upload to TestFlight
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-        run: >
-          set -o pipefail &&
-          xcodebuild -exportArchive
-          -archivePath "$RUNNER_TEMP/Terris.xcarchive"
-          -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
-          -exportPath "$RUNNER_TEMP/export"
-          -allowProvisioningUpdates
-          -authenticationKeyPath "$RUNNER_TEMP/asc_key.p8"
-          -authenticationKeyID "$ASC_KEY_ID"
-          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+        run: |
+          set -o pipefail
+          KEY_ID=$(printf '%s' "$ASC_KEY_ID" | tr -d '[:space:]')
+          ISSUER_ID=$(printf '%s' "$ASC_ISSUER_ID" | tr -d '[:space:]')
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Terris.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/asc_key.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
           | tee export.log | grep -E "error:|Upload|EXPORT|\*\*"
       - name: Remove the key
         if: always()
