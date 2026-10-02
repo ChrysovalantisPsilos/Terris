@@ -98,8 +98,10 @@ batches; never push WIP just to see if it compiles.
   `-allowProvisioningUpdates` and the App Store Connect API key: cloud
   signing, no certificate or profile stored. Build number = the run number.
   GitHub secrets (names only): `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`
-  (the whole .p8, BEGIN/END lines included), `APPLE_TEAM_ID`; the same team
-  key as Budgeer's (Admin role). The run revokes earlier runs' "Created via
+  (the whole .p8, BEGIN/END lines included), `APPLE_TEAM_ID`. Terris has
+  its **own** team API key ("Terris CI", Admin role, which cloud signing
+  needs), never Budgeer's (owner's rule, Oct 2026). The issuer id and team id
+  are the account's, so they match Budgeer's by nature. The run revokes earlier runs' "Created via
   API" development certificates (`scripts/asc/certificates.mjs`, shared with
   Budgeer's team), so don't run it while a Budgeer upload is signing.
   One-time steps by hand: the app record in App Store Connect
