@@ -34,7 +34,7 @@ struct CountryScreen: View {
                 VStack(alignment: .leading, spacing: 22) {
                     ZStack(alignment: .bottom) {
                         CountryHero(iso: f.iso, name: f.name, subtitle: subtitle(f), status: f.status,
-                                    photoID: model.photoIDs.first, effects: effects)
+                                    photoIDs: model.photoIDs, effects: effects)
                         StatusPicker(status: f.status, floating: true) { model.tap($0) }
                             .padding(.horizontal, Theme.margin)
                             .padding(.bottom, 14)
@@ -148,7 +148,8 @@ struct CountryScreen: View {
             SectionTitle("Photos") { Text("\(f.photoCount)").foregroundStyle(Theme.muted) }
             ScrollView(.horizontal) {
                 HStack(spacing: 10) {
-                    ForEach(model.photoIDs, id: \.self) { id in
+                    // Only photos that open; the note below explains the rest.
+                    ForEach(model.photoIDs.filter { photoProblems[$0] == nil }, id: \.self) { id in
                         AssetImage(assetIdentifier: id, onUnavailable: { photoProblems[id] = $0 })
                             .frame(width: 104, height: 104)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -167,7 +168,7 @@ struct CountryScreen: View {
     /// The reason that matters most: no access, then limited, then missing.
     private var worstPhotoProblem: PhotoProblem? {
         let found = Set(photoProblems.values)
-        return [.noAccess, .notShared, .missing].first { found.contains($0) }
+        return [.noAccess, .notShared, .missing, .couldNotLoad].first { found.contains($0) }
     }
 
     @ViewBuilder
@@ -187,6 +188,10 @@ struct CountryScreen: View {
             case .missing:
                 Text("Some photos aren't on this iPhone").font(.headline)
                 Text("They were found on another device or have been deleted. Scan the photos on this iPhone to add the ones here.")
+                    .font(.subheadline).foregroundStyle(Theme.muted)
+            case .couldNotLoad:
+                Text("Some photos couldn't be loaded").font(.headline)
+                Text("They're kept in iCloud Photos and didn't download just now. Check your connection and open this page again.")
                     .font(.subheadline).foregroundStyle(Theme.muted)
             }
         }

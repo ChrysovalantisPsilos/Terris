@@ -2,8 +2,8 @@
 //  CountryHero.swift
 //  Terris
 //
-//  The picture across the top of a country's page, edge to edge: the newest
-//  of the owner's own photos from there (read on the device, never uploaded),
+//  The picture across the top of a country's page, edge to edge: the first
+//  of the owner's own photos from there that opens (read on the device, never uploaded),
 //  or, without one, the country's outline in its status colour under the
 //  Map's sky (Night Atlas in dark mode, where it glows). The name sits over a
 //  soft shade that fades into the page; a small globe in the corner shows
@@ -17,22 +17,26 @@ struct CountryHero: View {
     let name: String
     let subtitle: Text
     let status: TravelStatus
-    /// The owner's photo to show, if any.
-    let photoID: String?
+    /// The owner's photos from there, best first; the hero shows the first
+    /// one that opens.
+    let photoIDs: [String]
     let effects: MapEffects
 
-    @State private var photoFailed = false
+    /// How many photos failed to open, so the hero moves on to the next.
+    @State private var skipped = 0
 
     /// Includes the room the floating status picker overlaps at the bottom.
     static let height: CGFloat = 400
 
-    private var showsPhoto: Bool { photoID != nil && !photoFailed }
+    private var photoID: String? { photoIDs.dropFirst(skipped).first }
+    private var showsPhoto: Bool { photoID != nil }
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             if showsPhoto {
                 AssetImage(assetIdentifier: photoID, targetSize: CGSize(width: 440, height: Self.height),
-                           onUnavailable: { _ in photoFailed = true })
+                           onUnavailable: { _ in skipped += 1 })
+                    .id(photoID)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 LinearGradient(stops: [
                     .init(color: .clear, location: 0.35),

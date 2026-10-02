@@ -22,6 +22,9 @@ enum PhotoProblem: Equatable {
     /// Not in this device's library: found on another device (photo
     /// references are per device), or deleted since.
     case missing
+    /// In the library, but the image didn't arrive (an iCloud Photos
+    /// original that couldn't be downloaded just now).
+    case couldNotLoad
 }
 
 struct AssetImage: View {
@@ -55,6 +58,7 @@ struct AssetImage: View {
         switch problem {
         case .noAccess, .notShared: "lock"
         case .missing: "photo.badge.exclamationmark"
+        case .couldNotLoad: "icloud.slash"
         case nil: "photo"
         }
     }
@@ -95,6 +99,6 @@ struct AssetImage: View {
             withAnimation(Motion.quick) { image = img }
         }
         // Leaving the screen cancels the load; that isn't a failure.
-        if image == nil, !Task.isCancelled { fail(.missing) }
+        if image == nil, !Task.isCancelled { fail(.couldNotLoad) }
     }
 }
