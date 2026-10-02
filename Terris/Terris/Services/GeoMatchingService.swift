@@ -19,26 +19,20 @@ final class GeoMatchingService {
         let administrativeArea: String?
     }
 
+    /// Resolves a coordinate to a country entirely offline (point-in-polygon
+    /// against bundled countries.geojson). No network, no rate limits — safe
+    /// for bulk photo import. City-name enrichment is deferred; `cityName`
+    /// is intentionally nil here (see plan: optional, cached, later).
     func match(latitude: Double, longitude: Double) async -> GeoMatch {
-        let location = CLLocation(latitude: latitude, longitude: longitude)
-        guard let request = MKReverseGeocodingRequest(location: location) else {
+        guard let hit = OfflineCountryResolver.shared.resolve(latitude: latitude, longitude: longitude) else {
             return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil)
         }
-        do {
-            let items = try await request.mapItems
-            guard let item = items.first,
-                  let rep = item.addressRepresentations else {
-                return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil)
-            }
-            return GeoMatch(
-                countryName: rep.regionName,
-                countryCode: rep.__regionCode,   // NS_REFINED_FOR_SWIFT — raw ObjC accessor
-                cityName: rep.cityName,
-                administrativeArea: rep.regionName
-            )
-        } catch {
-            return GeoMatch(countryName: nil, countryCode: nil, cityName: nil, administrativeArea: nil)
-        }
+        return GeoMatch(
+            countryName: hit.name,
+            countryCode: hit.iso,
+            cityName: nil,
+            administrativeArea: nil
+        )
     }
 
     /// Find or create Country entity matching an ISO code

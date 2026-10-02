@@ -13,7 +13,6 @@ final class StatsViewModel {
     var livedInCount = 0
     var wantToCount = 0
     var cityCount = 0
-    var attractionCount = 0
     var continentsCovered = 0
     var completionPercent: Double = 0
     var continentBreakdown: [ContinentStat] = []
@@ -44,13 +43,11 @@ final class StatsViewModel {
     func refresh(context: NSManagedObjectContext) {
         let countries = (try? context.fetch(Country.fetchRequest())) ?? []
         let cities = (try? context.fetch(City.fetchRequest())) ?? []
-        let attractions = (try? context.fetch(Attraction.fetchRequest())) ?? []
 
         visitedCount = countries.filter { $0.status == TravelStatus.visited.rawValue }.count
         livedInCount = countries.filter { $0.status == TravelStatus.livedIn.rawValue }.count
         wantToCount  = countries.filter { $0.status == TravelStatus.wantToVisit.rawValue }.count
         cityCount    = cities.filter { $0.status != TravelStatus.none.rawValue }.count
-        attractionCount = attractions.filter { $0.status != TravelStatus.none.rawValue }.count
         totalCountries = countries.count
 
         let done = visitedCount + livedInCount
@@ -142,8 +139,6 @@ struct StatsDashboardView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             DashStatCard(value: viewModel.cityCount, label: "Cities Explored",
                      icon: "building.2.fill", color: .orange)
-            DashStatCard(value: viewModel.attractionCount, label: "Attractions",
-                     icon: "mappin.circle.fill", color: .pink)
             DashStatCard(value: viewModel.continentsCovered, label: "Continents",
                      icon: "globe", color: .teal)
             DashStatCard(value: viewModel.visitedCount + viewModel.livedInCount,

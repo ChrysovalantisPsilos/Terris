@@ -412,3 +412,28 @@ private extension Color {
         self.init(red: r, green: g, blue: b)
     }
 }
+
+// MARK: - Live Badge (relocated from removed LiveFlightTrackingView)
+
+struct LiveBadge: View {
+    @State private var pulse = false
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(.red)
+                .frame(width: 7, height: 7)
+                .scaleEffect(pulse ? 1.3 : 1.0)
+                .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: pulse)
+                .onAppear { pulse = true }
+            Text("LIVE")
+                .font(.caption.weight(.black))
+                .tracking(1.5)
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(.red.opacity(0.25), in: Capsule())
+        .overlay(Capsule().strokeBorder(.red.opacity(0.6), lineWidth: 1))
+    }
+}

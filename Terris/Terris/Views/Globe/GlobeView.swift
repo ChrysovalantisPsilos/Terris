@@ -47,7 +47,7 @@ struct GlobeView: UIViewRepresentable {
     let countries: [Country]
     var cities: [City] = []
     var flights: [Flight] = []
-    var mapAppearance: MapAppearance = .hybridFlyover
+    var mapAppearance: MapAppearance = .mutedStandard
 
     func makeCoordinator() -> Coordinator {
         Coordinator(viewModel: viewModel, countries: countries)
