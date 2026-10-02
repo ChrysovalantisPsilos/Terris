@@ -65,10 +65,13 @@ Terris/
                              BrandMark (the Summit Flag as animatable shapes)
     Geo/                     Projection (orthographic, Equal Earth), WorldShapes
                              (countries.geojson), GlobeMap / FlatMap canvases
-                             (fill-in, pulses, drawing routes, the plane)
+                             (fill-in, pulses, drawing routes, the plane),
+                             CountrySilhouette (pure: a country's outline, mainland
+                             and linked islands, in a unit square)
     Map/                     MapFigures (pure), MapModel, MapScreen (Globe, Journal,
                              Atlas layouts), MapComponents
-    Country/                 CountryFigures + CountryModel, CountryScreen (sheet)
+    Country/                 CountryFigures + CountryModel, CountryScreen (sheet),
+                             CountryHero (your newest photo there, or the outline)
     Search/                  SearchScreen, CountrySearch (pure)
     Flights/                 FlightFigures (pure, great-circle routes, distance),
                              FlightDraft + AirportSearch (pure), FlightsScreen (tab),
@@ -86,7 +89,7 @@ Terris/
     Resources/Fonts          Outfit-Bold (the wordmark only; OFL in docs/brand)
     Assets.xcassets          AppIcon (light, dark, tinted), AccentColor
   TerrisTests/               Swift Testing: projections, figures, country, search,
-                             shapes, flights, scan tally, motion; snapshots
+                             shapes, silhouettes, flights, scan tally, motion; snapshots
                              (XCTest, motion off)
 docs/brand/                  logo masters (SVG), brand sheet, README
 .github/workflows/ios-app.yml   macOS CI: build, unit tests, snapshots by hand
