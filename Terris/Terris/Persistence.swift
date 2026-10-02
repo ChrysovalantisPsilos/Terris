@@ -8,10 +8,14 @@
 import CoreData
 
 struct PersistenceController {
-    /// Unit tests run inside the app; they get an in-memory store with no
-    /// iCloud, so a test run never syncs or waits on CloudKit.
+    /// Unit tests run inside the app, and UI tests launch it with
+    /// "-uiTesting"; both get an in-memory store with no iCloud, so a test run
+    /// never syncs or waits on CloudKit. (CI builds are unsigned, without the
+    /// iCloud entitlement, and CloudKit stops the app when asked for a named
+    /// container it isn't entitled to.)
     static let shared = PersistenceController(
-        inMemory: ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil)
+        inMemory: ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.arguments.contains("-uiTesting"))
 
     @MainActor
     static let preview: PersistenceController = {

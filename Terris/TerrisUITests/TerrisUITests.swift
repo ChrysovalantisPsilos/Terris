@@ -25,7 +25,7 @@ final class TerrisUITests: XCTestCase {
     @MainActor
     func testExample() throws {
         // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+        let app = XCUIApplication.local()
         app.launch()
 
         // Use XCTAssert and related functions to verify your tests produce the correct results.
@@ -37,7 +37,16 @@ final class TerrisUITests: XCTestCase {
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+            XCUIApplication.local().launch()
         }
+    }
+}
+
+extension XCUIApplication {
+    /// The app with a local, in-memory store: no iCloud in UI tests.
+    static func local() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments.append("-uiTesting")
+        return app
     }
 }
