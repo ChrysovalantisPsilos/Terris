@@ -1,0 +1,95 @@
+# The iOS app on a Mac, in one job: the Xcode project from project.yml
+# (XcodeGen), a Simulator build, the unit tests, and (on runs by hand) the
+# snapshot PNGs of every screen as an artifact.
+#
+# macOS minutes cost ten times Linux ones, so this runs only on pushes to
+# develop that touch the app, on pull requests, and by hand (Actions →
+# ios-app → Run workflow, picking the branch). A newer push to the same branch
+# cancels the run in progress.
+#
+# The UI tests and the snapshot tests are slow, so they run only on a run by
+# hand with "snapshots" ticked. Pushes and pull requests run the build and the
+# unit tests.
+name: ios-app
+on:
+  push:
+    branches: [develop]
+    paths: ['Terris/**', '.github/workflows/ios-app.yml']
+  pull_request:
+    paths: ['Terris/**', '.github/workflows/ios-app.yml']
+  workflow_dispatch:
+    inputs:
+      snapshots:
+        description: Also run the UI tests and take the snapshot pictures (slow)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-app-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT: Terris/Terris.xcodeproj
+  SCHEME: Terris
+  DESTINATION: platform=iOS Simulator,name=iPhone 17,OS=26.5
+  DERIVED: Terris/DerivedData
+
+jobs:
+  app:
+    runs-on: macos-26
+    # A hung Simulator would otherwise burn up to six hours of macOS minutes.
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app && xcodebuild -version
+      - name: Install XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+        run: brew install xcodegen
+      - name: Project
+        run: cd Terris && xcodegen generate
+      - name: Build for the Simulator
+        run: >
+          set -o pipefail &&
+          xcodebuild build-for-testing
+          -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION"
+          -derivedDataPath "$DERIVED"
+          CODE_SIGNING_ALLOWED=NO
+          | tee build.log | grep -E "error:|warning: .*Terris/|BUILD|\*\*"
+      - name: Tests
+        # A hung test host shouldn't eat the job's whole budget.
+        timeout-minutes: 15
+        env:
+          TEST_RUNNER_SNAPSHOT_DIR: ${{ github.workspace }}/snapshots
+          TEST_RUNNER_TZ: UTC
+          # 'true' only on a run by hand with "snapshots" ticked.
+          TAKE_SNAPSHOTS: ${{ github.event_name == 'workflow_dispatch' && inputs.snapshots }}
+        run: |
+          set -o pipefail
+          ONLY="-only-testing:TerrisTests -skip-testing:TerrisTests/SnapshotTests"
+          if [ "$TAKE_SNAPSHOTS" = "true" ]; then ONLY=""; fi
+          xcodebuild test-without-building \
+            -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" \
+            -derivedDataPath "$DERIVED" -resultBundlePath TestResults.xcresult \
+            $ONLY \
+          | tee test.log | grep -E "error:|Test Case|Test Suite|Executed|\*\*"
+      - name: Snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots
+          path: snapshots/*.png
+          if-no-files-found: ignore
+      - name: Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: |
+            build.log
+            test.log
