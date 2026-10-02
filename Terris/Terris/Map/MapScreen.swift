@@ -144,7 +144,8 @@ private struct GlobeLayout: View {
 
     var body: some View {
         GeometryReader { geo in
-            let diameter = geo.size.width * 1.25
+            // Bleeds off both edges on iPhone; capped by the height on iPad.
+            let diameter = min(geo.size.width * 1.25, geo.size.height * 0.82)
             ZStack(alignment: .top) {
                 SkyBackdrop(fadeAt: 0.9)
 

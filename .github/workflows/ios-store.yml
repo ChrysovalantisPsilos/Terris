@@ -1,0 +1,35 @@
+# Puts the store material from docs/store on App Store Connect: the App Store
+# screenshots (iPhone 6.9" and iPad 13"), the listing text on the version
+# being prepared, and the TestFlight description and "What to Test" on the
+# newest build. By hand only (Actions → ios-store → Run workflow), from main.
+# It never submits anything for review; that stays the owner's call in App
+# Store Connect. Same secrets as ios-testflight (Terris's own API key).
+name: ios-store
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-store
+  cancel-in-progress: false
+
+jobs:
+  store:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Script tests
+        run: node --test scripts/asc/store.test.mjs
+      - name: Upload screenshots and text
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: node scripts/asc/store.mjs

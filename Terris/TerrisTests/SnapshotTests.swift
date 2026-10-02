@@ -134,14 +134,37 @@ final class SnapshotTests: XCTestCase {
 
     // MARK: Rendering
 
-    private func shot<V: View>(_ view: V, name: String, dark: Bool, settle: TimeInterval = 1.0) async throws {
+    // MARK: iPad (for the App Store's iPad screenshots)
+
+    /// An iPad Pro 12.9"/13" screen in points, with regular size classes so
+    /// the app lays out as it does on iPad (sidebar, wider sheets).
+    private static let iPadSize = CGSize(width: 1024, height: 1366)
+
+    func testIPadSnapshots() async throws {
+        let fixture = Fixture.full()
+        UserDefaults.standard.set(MapLayout.globe.rawValue, forKey: "mapLayout")
+        for dark in [false, true] {
+            try await shot(fixture.dress(RootView()), name: "ipad-map", dark: dark, size: Self.iPadSize, regular: true)
+        }
+        try await shot(fixture.dress(CountryScreen(iso: "JP", store: fixture.store)), name: "ipad-country", dark: false,
+                       size: Self.iPadSize, regular: true)
+        try await shot(fixture.dress(FlightsScreen()), name: "ipad-flights", dark: false,
+                       size: Self.iPadSize, regular: true)
+    }
+
+    private func shot<V: View>(_ view: V, name: String, dark: Bool, settle: TimeInterval = 1.0,
+                               size: CGSize? = nil, regular: Bool = false) async throws {
         let host = UIHostingController(rootView: view.tint(Theme.accent))
         host.overrideUserInterfaceStyle = dark ? .dark : .light
+        if regular {
+            host.traitOverrides.horizontalSizeClass = .regular
+            host.traitOverrides.verticalSizeClass = .regular
+        }
         // A window in the host app's scene, so it is really on screen and
         // drawHierarchy has something to draw.
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow(frame: .zero)
-        window.frame = CGRect(origin: .zero, size: Self.size)
+        window.frame = CGRect(origin: .zero, size: size ?? Self.size)
         window.overrideUserInterfaceStyle = dark ? .dark : .light
         window.rootViewController = host
         window.makeKeyAndVisible()
