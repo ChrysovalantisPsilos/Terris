@@ -78,7 +78,7 @@ struct FlightsScreen: View {
 
             // The routes, edge to edge, fading into the page above and below.
             // Land stays neutral: the routes are the only colour here.
-            FlatMap(statusByISO: [:], routes: f.routes, effects: effects)
+            FlatMap(statusByISO: [:], routes: f.routes, effects: effects, showsOcean: false)
                 .overlay {
                     LinearGradient(stops: [
                         .init(color: Theme.canvas, location: 0),

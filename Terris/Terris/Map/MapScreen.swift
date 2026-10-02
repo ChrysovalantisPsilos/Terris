@@ -149,10 +149,17 @@ private struct GlobeLayout: View {
             ZStack(alignment: .top) {
                 SkyBackdrop(fadeAt: 0.9)
 
+                // A soft light around the globe: daylight, or an atmosphere at night.
+                Circle()
+                    .fill(Theme.globeHalo)
+                    .frame(width: diameter * 1.02, height: diameter * 1.02)
+                    .blur(radius: diameter * 0.04)
+                    .position(x: geo.size.width / 2, y: 150 + diameter / 2)
+                    .accessibilityHidden(true)
+
                 GlobeMap(statusByISO: figures.statusByISO,
                          center: Binding(get: { camera.center }, set: { camera.set($0) }),
                          effects: effects,
-                         showsHalo: true,
                          onSelect: { select($0) },
                          onFling: { target in
                              camera.turn(to: target, duration: 0.9, animated: animate, curve: Motion.easeOutCubic)

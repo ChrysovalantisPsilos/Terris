@@ -157,8 +157,6 @@ struct GlobeMap: View {
     var highlightISO: String? = nil
     var interactive = true
     var effects: MapEffects = .none
-    /// A soft light around the globe (the Map's big globe).
-    var showsHalo = false
     var onSelect: (String) -> Void = { _ in }
     /// Called when a drag ends, with where the fling would carry the globe.
     var onFling: ((GeoPoint) -> Void)? = nil
@@ -175,11 +173,6 @@ struct GlobeMap: View {
                 Canvas { ctx, _ in
                     let disc = Path(ellipseIn: CGRect(x: mid.x - radius, y: mid.y - radius,
                                                       width: radius * 2, height: radius * 2))
-                    if showsHalo {
-                        var halo = ctx
-                        halo.addFilter(.blur(radius: radius * 0.06))
-                        halo.stroke(disc, with: .color(Theme.globeHalo), lineWidth: radius * 0.08)
-                    }
                     ctx.fill(disc, with: .color(Theme.ocean))
                     drawGraticule(&ctx, mid: mid, radius: radius)
                     MapPainter(statusByISO: statusByISO, highlightISO: highlightISO,
@@ -267,6 +260,8 @@ struct FlatMap: View {
     /// A route a small plane glides along once (the flight page).
     var planeRoute: FlightFigures.Route? = nil
     var effects: MapEffects = .none
+    /// Fill the sea; off where the map sits straight on the page (Flights).
+    var showsOcean = true
     var onSelect: (String) -> Void = { _ in }
 
     @State private var settled = true
@@ -285,7 +280,9 @@ struct FlatMap: View {
             let mid = CGPoint(x: w / 2, y: h / 2 + scale * 0.06)
             TimelineView(.animation(paused: settled)) { timeline in
                 Canvas { ctx, _ in
-                    ctx.fill(Path(CGRect(origin: .zero, size: geo.size)), with: .color(Theme.ocean))
+                    if showsOcean {
+                        ctx.fill(Path(CGRect(origin: .zero, size: geo.size)), with: .color(Theme.ocean))
+                    }
                     MapPainter(statusByISO: statusByISO, highlightISO: highlightISO,
                                effects: effects, now: timeline.date)
                         .paint(&ctx, shapes: WorldShapes.shared.shapes.filter { $0.iso != "AQ" }) { p in
