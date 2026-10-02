@@ -54,6 +54,9 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
         INFOPLIST_KEY_CFBundleDisplayName: Terris
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.travel
+        # Only the OS's own TLS and keychain: no export-compliance question per build.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: >-
           Terris reads where your photos were taken to fill in the countries
           you've visited. Your photos never leave your device.

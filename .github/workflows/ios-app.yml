@@ -71,7 +71,7 @@ jobs:
           TAKE_SNAPSHOTS: ${{ github.event_name == 'workflow_dispatch' && inputs.snapshots }}
         run: |
           set -o pipefail
-          ONLY="-only-testing:TerrisTests"
+          ONLY="-only-testing:TerrisTests -skip-testing:TerrisTests/SnapshotTests"
           if [ "$TAKE_SNAPSHOTS" = "true" ]; then ONLY=""; fi
           xcodebuild test-without-building \
             -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" \

@@ -92,6 +92,23 @@ batches; never push WIP just to see if it compiles.
 - **Devices:** iPhone and iPad (`RootAdaptiveView` has an iPad split layout).
 - **Privacy strings:** the photo-library scan needs
   `NSPhotoLibraryUsageDescription`; it's in `project.yml`.
+- **TestFlight (the Budgeer setup):** `.github/workflows/ios-testflight.yml`,
+  by hand (Actions → ios-testflight → Run workflow). macos-26 / Xcode 26.5,
+  `xcodebuild archive` + `-exportArchive` (app-store-connect, upload) with
+  `-allowProvisioningUpdates` and the App Store Connect API key: cloud
+  signing, no certificate or profile stored. Build number = the run number.
+  GitHub secrets (names only): `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`
+  (the whole .p8, BEGIN/END lines included), `APPLE_TEAM_ID`; the same team
+  key as Budgeer's (Admin role). The run revokes earlier runs' "Created via
+  API" development certificates (`scripts/asc/certificates.mjs`, shared with
+  Budgeer's team), so don't run it while a Budgeer upload is signing.
+  One-time steps by hand: the app record in App Store Connect
+  (`com.chrysovalantis.Terris`), and the iCloud container
+  `iCloud.com.chrysovalantis.Terris` registered in the developer portal and
+  assigned to the App ID (cloud signing can't create containers, as with
+  Budgeer's App Groups). Before the first App Store release, deploy the
+  CloudKit schema from Development to Production in the CloudKit console.
+  `ITSAppUsesNonExemptEncryption` is NO.
 - **CI minutes are scarce** (macOS costs 10x). `ios-app.yml` runs on pushes
   to develop that touch the app, on pull requests, and by hand. Snapshots are
   taken only on runs by hand with "snapshots" ticked.

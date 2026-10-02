@@ -20,10 +20,16 @@ final class ScanModel {
         case done
     }
 
-    private(set) var phase: Phase = .intro
-    private(set) var tally = ScanTally()
+    private(set) var phase: Phase
+    private(set) var tally: ScanTally
     private(set) var limited = false
     private var task: Task<Void, Never>?
+
+    /// A preset phase and tally are for snapshots and previews.
+    init(phase: Phase = .intro, tally: ScanTally = ScanTally()) {
+        self.phase = phase
+        self.tally = tally
+    }
 
     var statusByISO: [String: TravelStatus] {
         Dictionary(uniqueKeysWithValues: tally.foundOrder.map { ($0, TravelStatus.visited) })
@@ -56,10 +62,15 @@ struct ScanScreen: View {
     @Environment(FootprintStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @State private var model = ScanModel()
+    @State private var model: ScanModel
     @State private var center = GeoPoint(lon: 15, lat: 30)
     /// Called when the flow ends, whether the user added results or skipped.
-    var onFinish: () -> Void = {}
+    private let onFinish: () -> Void
+
+    init(model: ScanModel = ScanModel(), onFinish: @escaping () -> Void = {}) {
+        _model = State(initialValue: model)
+        self.onFinish = onFinish
+    }
 
     var body: some View {
         VStack(spacing: 20) {
