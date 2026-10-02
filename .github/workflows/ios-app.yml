@@ -93,3 +93,33 @@ jobs:
           path: |
             build.log
             test.log
+
+  # On runs by hand with snapshots: the PNGs also go to the `snapshots`
+  # branch (an orphan branch, overwritten every time), so they can be fetched
+  # with git where the artifact store isn't reachable. A Linux job, the only
+  # one with write access.
+  publish-snapshots:
+    needs: app
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.snapshots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: snapshots
+          path: snapshots
+      - name: Push to the snapshots branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! ls snapshots/*.png >/dev/null 2>&1; then echo "No snapshots to publish."; exit 0; fi
+          cd snapshots
+          git init -q -b snapshots
+          git config user.name "Chrysovalantis Psilos"
+          git config user.email "chrysovalantis.psilos@outlook.com"
+          printf 'Snapshots of %s (ios-app run %s). Overwritten on every run.\n' "$GITHUB_SHA" "$GITHUB_RUN_NUMBER" > README.md
+          git add -A
+          git commit -q -m "Snapshots of ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" snapshots
