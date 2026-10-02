@@ -32,7 +32,7 @@ struct CountryHero: View {
         ZStack(alignment: .bottomLeading) {
             if showsPhoto {
                 AssetImage(assetIdentifier: photoID, targetSize: CGSize(width: 440, height: Self.height),
-                           onUnavailable: { photoFailed = true })
+                           onUnavailable: { _ in photoFailed = true })
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 LinearGradient(stops: [
                     .init(color: .clear, location: 0.35),

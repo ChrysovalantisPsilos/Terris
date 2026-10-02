@@ -20,6 +20,9 @@ struct CountryScreen: View {
     @State private var notes = ""
     @State private var newCity = ""
     @FocusState private var notesFocused: Bool
+    /// Why some photos can't be shown, by photo, to explain it under the strip.
+    @State private var photoProblems: [String: PhotoProblem] = [:]
+    @Environment(\.openURL) private var openURL
 
     init(iso: String, store: FootprintStore) {
         _model = State(initialValue: CountryModel(iso: iso, store: store))
@@ -146,7 +149,7 @@ struct CountryScreen: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 10) {
                     ForEach(model.photoIDs, id: \.self) { id in
-                        AssetImage(assetIdentifier: id)
+                        AssetImage(assetIdentifier: id, onUnavailable: { photoProblems[id] = $0 })
                             .frame(width: 104, height: 104)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     }
@@ -155,7 +158,51 @@ struct CountryScreen: View {
             }
             .scrollIndicators(.hidden)
             .padding(.horizontal, -Theme.margin)
+            if let problem = worstPhotoProblem {
+                photoNote(problem)
+            }
         }
+    }
+
+    /// The reason that matters most: no access, then limited, then missing.
+    private var worstPhotoProblem: PhotoProblem? {
+        let found = Set(photoProblems.values)
+        return [.noAccess, .notShared, .missing].first { found.contains($0) }
+    }
+
+    @ViewBuilder
+    private func photoNote(_ problem: PhotoProblem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            switch problem {
+            case .noAccess:
+                Text("Terris can't see your photos").font(.headline)
+                Text("Allow access in Settings to show them here. They stay on your iPhone.")
+                    .font(.subheadline).foregroundStyle(Theme.muted)
+                settingsButton
+            case .notShared:
+                Text("Terris can only see the photos you've shared with it").font(.headline)
+                Text("Choose Full Access in Settings to show these. They stay on your iPhone.")
+                    .font(.subheadline).foregroundStyle(Theme.muted)
+                settingsButton
+            case .missing:
+                Text("Some photos aren't on this iPhone").font(.headline)
+                Text("They were found on another device or have been deleted. Scan the photos on this iPhone to add the ones here.")
+                    .font(.subheadline).foregroundStyle(Theme.muted)
+            }
+        }
+        .foregroundStyle(Theme.ink)
+        .card()
+    }
+
+    private var settingsButton: some View {
+        Button {
+            if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+        } label: {
+            Label("Open Settings", systemImage: "gear").font(.subheadline.weight(.semibold))
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(Theme.accent)
+        .padding(.top, 4)
     }
 
     private func facts(_ f: CountryFigures) -> some View {
