@@ -72,10 +72,15 @@ enum AirportSearch {
                 || a.countryISO.caseInsensitiveCompare(q) == .orderedSame { return 4 }
             return nil
         }
-        return airports
-            .compactMap { a in rank(a).map { (a, $0) } }
-            .sorted { $0.1 != $1.1 ? $0.1 < $1.1 : $0.0.city.localizedCompare($1.0.city) == .orderedAscending }
-            .prefix(limit)
-            .map(\.0)
+        // Split into typed steps: as one chain the compiler times out.
+        var ranked: [(airport: AirportRecord, rank: Int)] = []
+        for airport in airports {
+            if let r = rank(airport) { ranked.append((airport, r)) }
+        }
+        ranked.sort { lhs, rhs in
+            if lhs.rank != rhs.rank { return lhs.rank < rhs.rank }
+            return lhs.airport.city.localizedCompare(rhs.airport.city) == .orderedAscending
+        }
+        return ranked.prefix(limit).map { $0.airport }
     }
 }
