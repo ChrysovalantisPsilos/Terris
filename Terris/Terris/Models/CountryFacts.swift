@@ -6,8 +6,9 @@
 //  free, trustworthy — no API, no hallucination. Shown on every country
 //  detail page (visited or not) so the page is never a dead end.
 //
-//  The dataset is intentionally partial: a country with no entry simply
-//  shows no facts section. Grow countryFacts.json over time.
+//  countryFacts.json has three facts for every country in CountryData.all:
+//  checked, timeless (no rankings or statistics that go stale) and neutral.
+//  A country without an entry would simply show no facts section.
 //
 
 import Foundation

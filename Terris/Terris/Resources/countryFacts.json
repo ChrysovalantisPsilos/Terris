@@ -5,14 +5,19 @@
     "The capital, Andorra la Vella, is the highest capital city in Europe, at over 1,000 metres."
   ],
   "AE": [
-    "The UAE is home to the world's tallest building, the Burj Khalifa.",
+    "Dubai's Burj Khalifa, completed in 2010, stands 828 m tall.",
     "Dubai was a modest pearling and trading port only decades ago.",
-    "Roughly 200 nationalities live in the country."
+    "The country is a federation of seven emirates, with Abu Dhabi as its capital."
   ],
   "AF": [
     "Afghanistan is home to Band-e Amir, a chain of deep blue lakes held back by natural travertine dams.",
     "The Minaret of Jam, a 12th-century brick tower about 65 metres tall, stands in a remote mountain valley.",
     "Lapis lazuli has been mined in the Badakhshan region for over 6,000 years."
+  ],
+  "AG": [
+    "Nelson's Dockyard in English Harbour is a UNESCO-listed Georgian naval dockyard.",
+    "Barbuda's Codrington Lagoon hosts one of the largest frigatebird colonies in the world.",
+    "The national dish is fungee and pepperpot, a cornmeal side served with a thick vegetable stew."
   ],
   "AL": [
     "Albanians call their country Shqipëria, often translated as the Land of the Eagles.",
@@ -37,7 +42,7 @@
   "AT": [
     "Austria is the birthplace of Mozart and the classical music tradition of Vienna.",
     "Around 60% of the country is covered by the Alps.",
-    "Vienna regularly ranks among the world's most liveable cities."
+    "Vienna's Schönbrunn Zoo, founded in 1752, is the oldest zoo still operating in the world."
   ],
   "AU": [
     "Australia is the only nation that is also a continent.",
@@ -54,15 +59,20 @@
     "The capital, Sarajevo, hosted the Winter Olympic Games in 1984.",
     "The country has a short stretch of Adriatic coast, about 20 km long, around the town of Neum."
   ],
+  "BB": [
+    "Barbados is known as the birthplace of rum, and Mount Gay traces its history back to 1703.",
+    "The grapefruit first appeared here as a natural cross between an orange and a pomelo.",
+    "George Washington's only trip outside North America was to Barbados, in 1751."
+  ],
   "BD": [
     "Bangladesh is home to part of the Sundarbans, the largest mangrove forest in the world and a haven for Bengal tigers.",
     "Cox's Bazar has one of the longest unbroken sandy beaches in the world, stretching about 120 km.",
     "Most of the country lies on the Ganges delta, the largest river delta on Earth."
   ],
   "BE": [
-    "Belgium is often called the capital of Europe, hosting core EU institutions.",
+    "Brussels' Grand-Place, ringed by ornate guildhalls, is a UNESCO World Heritage Site.",
     "It produces hundreds of distinct varieties of beer.",
-    "The French fry and the modern praline both have strong Belgian roots."
+    "The filled chocolate praline was invented in Brussels by Jean Neuhaus in 1912."
   ],
   "BF": [
     "The name Burkina Faso means 'land of upright people'.",
@@ -94,10 +104,20 @@
     "Brunei shares the island of Borneo with Malaysia and Indonesia.",
     "Much of the country is covered in rainforest, protected in places like Ulu Temburong National Park."
   ],
+  "BO": [
+    "Bolivia's Salar de Uyuni is the largest salt flat in the world.",
+    "La Paz, at about 3,600 m, is the highest seat of government in the world.",
+    "Tiwanaku, near Lake Titicaca, was the centre of a powerful civilisation long before the Incas."
+  ],
   "BR": [
     "Brazil is home to about 60% of the Amazon rainforest.",
     "It's the largest country in South America by area and population.",
-    "Portuguese is the official language, unlike its Spanish-speaking neighbors."
+    "It is the only country in the Americas where Portuguese is the official language."
+  ],
+  "BS": [
+    "The Bahamas is an archipelago of about 700 islands and more than 2,000 cays.",
+    "Christopher Columbus made his first landfall in the Americas here in 1492.",
+    "Dean's Blue Hole on Long Island plunges 202 m, making it one of the deepest blue holes on Earth."
   ],
   "BT": [
     "Paro Taktsang, the Tiger's Nest monastery, clings to a cliff about 900 metres above the Paro valley.",
@@ -114,10 +134,15 @@
     "The forest is home to the European bison, the heaviest land animal in Europe.",
     "Draniki, crispy potato pancakes served with sour cream, are a beloved national dish."
   ],
+  "BZ": [
+    "Belize's barrier reef is the largest in the Northern Hemisphere.",
+    "The Great Blue Hole is a giant circular marine sinkhole about 300 m across.",
+    "It is the only country in Central America where English is the official language."
+  ],
   "CA": [
     "Canada has the longest coastline of any country in the world.",
     "It has two official languages: English and French.",
-    "About 20% of the world's fresh water lies within its borders."
+    "There are more lakes in Canada than in any other country."
   ],
   "CD": [
     "The Congo River is the deepest river in the world, reaching depths of over 220 metres.",
@@ -135,8 +160,8 @@
     "Brazzaville's 'sapeurs' are famous for their elegant and flamboyant fashion."
   ],
   "CH": [
-    "Switzerland has four official languages: German, French, Italian, and Romansh.",
-    "It hasn't been at war since 1815 and maintains armed neutrality.",
+    "Switzerland has four national languages: German, French, Italian and Romansh.",
+    "The Jungfraujoch, at 3,454 m, is the highest railway station in Europe.",
     "Chocolate consumption per person here is among the highest in the world."
   ],
   "CI": [
@@ -144,15 +169,35 @@
     "The Basilica of Our Lady of Peace in Yamoussoukro is one of the largest churches in the world.",
     "Taï National Park protects one of the last large areas of primary rainforest in West Africa."
   ],
+  "CL": [
+    "Chile stretches about 4,300 km from north to south but is on average under 180 km wide.",
+    "The Atacama is the driest non-polar desert in the world.",
+    "Easter Island, home to the giant moai statues, is part of the country."
+  ],
   "CM": [
     "Cameroon is often called 'Africa in miniature' for its varied landscapes and cultures.",
     "Mount Cameroon, an active volcano over 4,000 metres high, rises close to the Atlantic coast.",
     "Both French and English are official languages."
   ],
   "CN": [
-    "China is the world's most populous country alongside India.",
+    "The Terracotta Army near Xi'an has thousands of life-size clay soldiers guarding an emperor's tomb.",
     "The Great Wall stretches more than 21,000 km in total.",
     "It spans five geographic time zones but officially uses just one."
+  ],
+  "CO": [
+    "Colombia is the only South American country with both Pacific and Caribbean coastlines.",
+    "It has more bird species than any other country in the world.",
+    "Caño Cristales is nicknamed the 'river of five colours' for its seasonal red water plants."
+  ],
+  "CR": [
+    "Costa Rica's everyday greeting and motto is 'pura vida', meaning 'pure life'.",
+    "More than a quarter of the country is protected in national parks and reserves.",
+    "Cocos Island, far out in the Pacific, is a UNESCO site famed for its hammerhead sharks."
+  ],
+  "CU": [
+    "Cuba is the largest island in the Caribbean.",
+    "The bee hummingbird, the smallest bird in the world, lives only here.",
+    "Old Havana and its fortifications are a UNESCO World Heritage Site."
   ],
   "CV": [
     "The archipelago is made up of ten volcanic islands in the Atlantic Ocean.",
@@ -170,7 +215,7 @@
     "The word 'robot' first appeared in a 1920 Czech play."
   ],
   "DE": [
-    "Germany has over 1,500 different types of beer.",
+    "Bavaria's beer purity law, the Reinheitsgebot, dates back to 1516.",
     "There is no federal speed limit on stretches of the Autobahn.",
     "It shares borders with nine countries — more than almost any nation in Europe."
   ],
@@ -184,10 +229,25 @@
     "Denmark's flag, the Dannebrog, is often called the oldest national flag still in use.",
     "No point in the country is more than about 50 km from the sea."
   ],
+  "DM": [
+    "Dominica's Boiling Lake is the second-largest hot lake in the world.",
+    "The sisserou parrot, found nowhere else on Earth, appears on the national flag.",
+    "The Waitukubuli National Trail runs about 185 km along the length of the island."
+  ],
+  "DO": [
+    "Santo Domingo is the oldest continuously inhabited European-founded city in the Americas.",
+    "Pico Duarte, at over 3,000 m, is the highest mountain in the Caribbean.",
+    "It is the home of merengue, a music and dance on UNESCO's intangible heritage list."
+  ],
   "DZ": [
     "Algeria is the largest country in Africa by area.",
     "The Sahara Desert covers most of the country's land.",
     "Tassili n'Ajjer holds thousands of prehistoric rock paintings and engravings."
+  ],
+  "EC": [
+    "The Galápagos Islands, which helped inspire Darwin's theory of evolution, belong to Ecuador.",
+    "The Panama hat actually comes from here, woven from toquilla straw.",
+    "Because of Earth's bulge, the summit of Chimborazo is the farthest point from the planet's centre."
   ],
   "EE": [
     "Estonia has more than 2,000 islands, the largest of which is Saaremaa.",
@@ -196,7 +256,7 @@
   ],
   "EG": [
     "The Great Pyramid of Giza is the only surviving Wonder of the Ancient World.",
-    "Egypt's civilization spans over 5,000 years of recorded history.",
+    "The temples of Abu Simbel were moved block by block in the 1960s to save them from rising waters.",
     "The Nile is generally considered the longest river in the world."
   ],
   "ER": [
@@ -205,9 +265,9 @@
     "The Dahlak Archipelago, off the coast in the Red Sea, has around 200 islands."
   ],
   "ES": [
-    "Spain has a 'siesta' tradition, though far fewer people take one today.",
-    "It produces roughly half of the world's olive oil.",
-    "La Sagrada Família in Barcelona has been under construction since 1882."
+    "The Alhambra in Granada is a Moorish palace and fortress complex, mostly from the 13th and 14th centuries.",
+    "It is the world's largest producer of olive oil.",
+    "Construction of La Sagrada Família in Barcelona began in 1882."
   ],
   "ET": [
     "Ethiopia is widely considered the birthplace of coffee.",
@@ -242,7 +302,12 @@
   "GB": [
     "The United Kingdom is made up of four nations: England, Scotland, Wales, and Northern Ireland.",
     "London's Underground is the world's oldest underground railway, opened in 1863.",
-    "The UK has no single written constitution."
+    "Stonehenge in Wiltshire was built in stages, beginning around 3000 BC."
+  ],
+  "GD": [
+    "Grenada is known as the Spice Isle, and a nutmeg appears on its national flag.",
+    "The world's first underwater sculpture park opened in its Molinere Bay in 2006.",
+    "The country also includes the smaller islands of Carriacou and Petite Martinique."
   ],
   "GE": [
     "Georgia has some of the oldest evidence of winemaking in the world, dating back about 8,000 years.",
@@ -274,15 +339,35 @@
     "It is regarded as the birthplace of democracy and the Olympic Games.",
     "No point in Greece is more than about 140 km from the sea."
   ],
+  "GT": [
+    "Guatemala's Tikal was one of the largest cities of the ancient Maya.",
+    "Lake Atitlán is ringed by three volcanoes.",
+    "The national currency, the quetzal, is named after the country's colourful national bird."
+  ],
   "GW": [
     "The Bijagós Archipelago is made up of around 88 islands and islets.",
     "Hippos on Orango Island are famous for swimming in the sea.",
     "Portuguese is the official language, while Kriol is the most widely spoken."
   ],
+  "GY": [
+    "Guyana is the only country in South America where English is the official language.",
+    "St George's Cathedral in Georgetown is one of the tallest wooden churches in the world.",
+    "The national bird is the hoatzin, whose chicks have claws on their wings."
+  ],
+  "HN": [
+    "Honduras is home to Copán, a Maya city famed for its carved stelae and Hieroglyphic Stairway.",
+    "Its Bay Islands sit on the Mesoamerican Reef, the largest reef system in the Americas.",
+    "The scarlet macaw is the national bird."
+  ],
   "HR": [
     "Croatia has more than a thousand islands along its Adriatic coast.",
     "The necktie originated here — 'cravat' comes from 'Croat'.",
     "Dubrovnik's old town is a UNESCO World Heritage Site."
+  ],
+  "HT": [
+    "Haiti shares the island of Hispaniola with the Dominican Republic.",
+    "The mountaintop Citadelle Laferrière is one of the largest fortresses in the Americas.",
+    "Its soup joumou, a hearty pumpkin soup, is on UNESCO's intangible heritage list."
   ],
   "HU": [
     "The Rubik's Cube was invented in 1974 by the Hungarian architect Ernő Rubik.",
@@ -320,14 +405,19 @@
     "Hand-knotted Persian carpets come from a weaving tradition thousands of years old."
   ],
   "IS": [
-    "Iceland runs almost entirely on renewable geothermal and hydro energy.",
-    "It has no mosquitoes.",
-    "The world's oldest still-functioning parliament, the Althing, was founded here in 930 AD."
+    "Almost all of Iceland's electricity and home heating comes from geothermal and hydro power.",
+    "The English word 'geyser' comes from Geysir, a hot spring in south-west Iceland.",
+    "Its parliament, the Althing, was founded at Thingvellir in 930 and is one of the oldest in the world."
   ],
   "IT": [
-    "Italy is home to more UNESCO World Heritage Sites than any other country.",
+    "Vatican City and San Marino are independent countries entirely surrounded by Italy.",
     "The city of Rome is older than the country of Italy, which only unified in 1861.",
     "Espresso, pizza, and Parmesan all originate here."
+  ],
+  "JM": [
+    "Jamaica is the birthplace of reggae, which is on UNESCO's intangible heritage list.",
+    "Blue Mountain coffee is grown on the slopes of the island's highest mountain range.",
+    "It is the third-largest island in the Caribbean, after Cuba and Hispaniola."
   ],
   "JO": [
     "Jordan is home to Petra, the rose-red city carved into rock by the Nabataeans.",
@@ -335,14 +425,14 @@
     "The Dead Sea is so salty that swimmers float effortlessly on its surface."
   ],
   "JP": [
-    "Japan has more than 6,800 islands.",
-    "Vending machines are ubiquitous — roughly one for every 30 people.",
-    "It is home to the world's oldest continuously operating company traditions."
+    "Japan is made up of more than 14,000 islands, according to a 2023 official recount.",
+    "The Shinkansen bullet train began running between Tokyo and Osaka in 1964.",
+    "Mount Fuji, the country's highest peak, is a volcano that last erupted in 1707."
   ],
   "KE": [
-    "Kenya's Great Rift Valley is visible from space.",
+    "Kenya is named after Mount Kenya, the second-highest mountain in Africa.",
     "The annual wildebeest migration is one of the largest on the planet.",
-    "It straddles the equator."
+    "The equator runs through the country, marked by roadside signs in towns such as Nanyuki."
   ],
   "KG": [
     "Issyk-Kul is one of the largest mountain lakes in the world, and it does not freeze in winter.",
@@ -364,14 +454,19 @@
     "Mount Karthala, an active volcano on Grande Comore, is the country's highest point.",
     "Coelacanths, fish once thought extinct, live in the deep waters off the islands."
   ],
+  "KN": [
+    "Saint Kitts and Nevis is the smallest sovereign state in the Americas.",
+    "Alexander Hamilton, a founding father of the United States, was born on Nevis.",
+    "Brimstone Hill Fortress, perched on a volcanic hill, is a UNESCO World Heritage Site."
+  ],
   "KP": [
     "Mount Paektu, the highest peak on the Korean Peninsula, holds a crater lake called Heaven Lake.",
     "Naengmyeon, cold buckwheat noodles in chilled broth, is a classic dish from Pyongyang.",
     "The Koguryo tombs, with wall paintings over 1,500 years old, are a UNESCO World Heritage Site."
   ],
   "KR": [
-    "South Korea has one of the fastest average internet speeds in the world.",
-    "Its capital, Seoul, is one of the most densely populated major cities.",
+    "Jeju Island's volcanic landscape and lava tubes are a UNESCO World Heritage Site.",
+    "Kimjang, the communal making of kimchi before winter, is on UNESCO's intangible heritage list.",
     "The Korean alphabet, Hangul, was designed to be easy to learn."
   ],
   "KW": [
@@ -393,6 +488,11 @@
     "Byblos is one of the oldest continuously inhabited cities in the world.",
     "The cedar tree on the national flag still grows in ancient groves such as the Cedars of God.",
     "Baalbek has some of the largest Roman temples ever built, including the Temple of Bacchus."
+  ],
+  "LC": [
+    "Saint Lucia's Pitons, two volcanic spires rising from the sea, are a UNESCO World Heritage Site.",
+    "The island has produced two Nobel laureates, poet Derek Walcott and economist Arthur Lewis.",
+    "The national dish is green fig and saltfish, made with unripe bananas."
   ],
   "LI": [
     "Liechtenstein is one of only two doubly landlocked countries, along with Uzbekistan.",
@@ -510,9 +610,9 @@
     "Mount Mulanje rises steeply from the surrounding plains to about 3,000 metres."
   ],
   "MX": [
-    "Mexico introduced chocolate, chilies, and corn to the world.",
+    "Maize was first domesticated in southern Mexico around 9,000 years ago.",
     "Mexico City is built on the site of the Aztec capital Tenochtitlan.",
-    "It has 35 UNESCO World Heritage Sites, among the most in the Americas."
+    "At the equinoxes, Chichén Itzá's El Castillo pyramid casts a shadow like a descending serpent."
   ],
   "MY": [
     "Malaysia's Petronas Twin Towers were the tallest buildings in the world from 1998 to 2004.",
@@ -539,13 +639,18 @@
     "Nollywood, its film industry, is one of the largest in the world by number of films made.",
     "Zuma Rock, a giant monolith near Abuja, appears on the 100 naira note."
   ],
+  "NI": [
+    "Lake Nicaragua, Central America's largest lake, is visited by bull sharks from the Caribbean.",
+    "Ometepe, an island in the lake, is formed by two volcanoes joined by a narrow isthmus.",
+    "León Cathedral, built in the 18th and early 19th centuries, is a UNESCO World Heritage Site."
+  ],
   "NL": [
     "About a quarter of the Netherlands lies below sea level.",
     "It has more bicycles than people.",
-    "The country is the world's second-largest agricultural exporter by value."
+    "Kinderdijk's 19 windmills, built around 1740 to drain the land, are a UNESCO World Heritage Site."
   ],
   "NO": [
-    "Norway's coastline, including fjords, stretches over 100,000 km.",
+    "Norway's coastline, including its fjords and islands, stretches over 100,000 km.",
     "It introduced salmon sushi to Japan in the 1980s.",
     "The sun doesn't fully set for weeks in summer above the Arctic Circle."
   ],
@@ -561,13 +666,18 @@
   ],
   "NZ": [
     "New Zealand was the first country to give women the right to vote, in 1893.",
-    "There are roughly five sheep for every person.",
+    "The flightless kiwi is a national symbol, and New Zealanders are nicknamed Kiwis.",
     "No part of the country is more than about 120 km from the sea."
   ],
   "OM": [
     "Oman's Dhofar region has supplied precious frankincense resin for thousands of years.",
     "Its ancient aflaj irrigation channels, still in use today, are a UNESCO World Heritage Site.",
     "The country is dotted with hundreds of forts and castles, including the UNESCO-listed Bahla Fort."
+  ],
+  "PA": [
+    "The Panama Canal, opened in 1914, links the Atlantic and Pacific oceans.",
+    "Casco Viejo, the old quarter of Panama City, is a UNESCO World Heritage Site.",
+    "The Guna people of the San Blas Islands are known for their colourful mola textiles."
   ],
   "PE": [
     "Peru is home to Machu Picchu, the iconic Inca citadel.",
@@ -592,7 +702,7 @@
   "PL": [
     "Poland is home to Europe's largest surviving primeval forest, Białowieża.",
     "It has one of the oldest salt mines in the world, at Wieliczka.",
-    "The country moved its entire borders westward after World War II."
+    "Marie Curie, the first person to win two Nobel Prizes, was born in Warsaw."
   ],
   "PS": [
     "Jericho is one of the oldest continuously inhabited cities in the world, settled over 10,000 years ago.",
@@ -600,7 +710,7 @@
     "Palestinian embroidery, known as tatreez, is recognised by UNESCO as intangible cultural heritage."
   ],
   "PT": [
-    "Portugal is one of the oldest nation-states in Europe, with borders largely unchanged since 1139.",
+    "Portugal's borders are among the oldest in Europe, largely set by a treaty in 1297.",
     "It's the world's largest producer of cork.",
     "The Vasco da Gama Bridge in Lisbon is one of the longest in Europe."
   ],
@@ -608,6 +718,11 @@
     "Palau's Rock Islands Southern Lagoon is a UNESCO World Heritage Site.",
     "In 2009 Palau created the world's first shark sanctuary.",
     "Visitors sign the Palau Pledge, a promise to protect the islands, stamped in their passport."
+  ],
+  "PY": [
+    "Paraguay has two official languages, Spanish and Guarani, and most people speak Guarani.",
+    "The Itaipu Dam on the Paraná River is one of the largest hydroelectric plants in the world.",
+    "Its 17th-century Jesuit missions of Trinidad and Jesús are a UNESCO World Heritage Site."
   ],
   "QA": [
     "Khor Al Adaid, the 'Inland Sea', is one of the few places on Earth where sand dunes meet the sea.",
@@ -656,13 +771,13 @@
   ],
   "SE": [
     "Sweden has among the most islands of any country — over 260,000.",
-    "It gave the world the zipper, the pacemaker, and Spotify.",
-    "Recycling is so efficient the country imports waste to fuel power plants."
+    "It gave the world the three-point seatbelt, the implantable pacemaker and Spotify.",
+    "The right of public access, allemansrätten, lets anyone walk, cycle and camp in most of the countryside."
   ],
   "SG": [
     "Singapore is one of only three surviving city-states in the world.",
     "It has four official languages: English, Malay, Mandarin, and Tamil.",
-    "The country is famed for its lush 'garden city' urban planning."
+    "The Supertrees at Gardens by the Bay are vertical gardens up to 50 m tall."
   ],
   "SI": [
     "Lake Bled has a tiny island with a church, reached by traditional wooden pletna boats.",
@@ -694,6 +809,11 @@
     "It is home to one of the largest camel populations in the world.",
     "Frankincense and myrrh have been harvested in the region for thousands of years."
   ],
+  "SR": [
+    "Suriname is the smallest country in South America.",
+    "It is the only country in South America where Dutch is the official language.",
+    "The historic centre of Paramaribo, the capital, is known for its colonial wooden buildings."
+  ],
   "SS": [
     "It became independent in 2011, making it the youngest country in the world.",
     "The Sudd, formed by the White Nile, is one of the largest wetlands in the world.",
@@ -703,6 +823,11 @@
     "Pico Cão Grande is a dramatic needle-shaped volcanic peak rising out of the rainforest.",
     "In the early 1900s, the islands were the world's largest producer of cocoa.",
     "The equator passes through Ilhéu das Rolas, a small islet off São Tomé."
+  ],
+  "SV": [
+    "El Salvador is the smallest country in Central America by area.",
+    "Joya de Cerén is a Maya farming village preserved under volcanic ash for about 1,400 years.",
+    "The national dish is the pupusa, a thick corn tortilla stuffed with cheese, beans or pork."
   ],
   "SY": [
     "The capital, Damascus, is one of the oldest continuously inhabited cities in the world.",
@@ -756,8 +881,13 @@
   ],
   "TR": [
     "Turkey straddles two continents, Europe and Asia.",
-    "Istanbul is the only major city that sits on two continents.",
+    "Cappadocia is famous for its fairy chimney rock formations and cave dwellings.",
     "It's home to Göbekli Tepe, among the oldest known temple sites on Earth."
+  ],
+  "TT": [
+    "Trinidad and Tobago is the birthplace of the steelpan, a drum first made from oil barrels.",
+    "Pitch Lake in La Brea is the largest natural deposit of asphalt in the world.",
+    "Its Carnival, held just before Lent, is one of the biggest festivals in the Caribbean."
   ],
   "TV": [
     "Tuvalu is the fourth-smallest country in the world by area.",
@@ -785,9 +915,14 @@
     "The White Nile begins its journey where it flows out of Lake Victoria at Jinja."
   ],
   "US": [
-    "The United States has no official national language at the federal level.",
+    "The Grand Canyon, carved by the Colorado River, is more than 1.6 km deep in places.",
     "It spans six time zones across its states.",
     "Yellowstone, established 1872, was the world's first national park."
+  ],
+  "UY": [
+    "Uruguay hosted and won the first FIFA World Cup, in 1930.",
+    "Mate, a herbal tea sipped through a metal straw from a gourd, is a national ritual.",
+    "The historic quarter of Colonia del Sacramento is a UNESCO World Heritage Site."
   ],
   "UZ": [
     "Uzbekistan is one of only two doubly landlocked countries in the world, along with Liechtenstein.",
@@ -798,6 +933,16 @@
     "Vatican City is the smallest country in the world, at under half a square kilometre.",
     "Michelangelo painted the Sistine Chapel ceiling between 1508 and 1512.",
     "The Swiss Guard has protected the Pope since 1506."
+  ],
+  "VC": [
+    "The country is made up of 32 islands and cays, nine of which are inhabited.",
+    "Its botanic gardens in Kingstown, founded in 1765, are among the oldest in the Americas.",
+    "Breadfruit was brought here by Captain Bligh in 1793 and is now part of the national dish."
+  ],
+  "VE": [
+    "Venezuela's Angel Falls is the highest uninterrupted waterfall in the world, at 979 m.",
+    "Catatumbo lightning over Lake Maracaibo is the highest concentration of lightning on Earth.",
+    "The arepa, a round corn flatbread with fillings, is eaten every day across the country."
   ],
   "VN": [
     "Vietnam is the world's second-largest coffee exporter.",
@@ -826,8 +971,8 @@
   ],
   "ZA": [
     "South Africa has three capital cities: Pretoria, Cape Town, and Bloemfontein.",
-    "It has 11 official languages.",
-    "Table Mountain is one of the oldest mountains on Earth."
+    "It has 12 official languages, including South African Sign Language.",
+    "The world's first human heart transplant was performed in Cape Town in 1967."
   ],
   "ZM": [
     "Victoria Falls is known locally as Mosi-oa-Tunya, 'the smoke that thunders'.",
