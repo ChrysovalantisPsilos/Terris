@@ -45,4 +45,16 @@ struct CountryTests {
         #expect(CountrySearch.filter(entries, query: "mt").map(\.isoCode) == ["MT"])
         #expect(CountrySearch.filter(entries, query: "").count == 4)
     }
+
+    @Test func cityChipsWrapOnlyWhenTheyDoNotFit() {
+        let chip = CGSize(width: 80, height: 44)
+        // Four 80pt chips with 8pt gaps need exactly 344pt: one row at 344.
+        let exact = FlowLayout.rows(Array(repeating: chip, count: 4), width: 344, spacing: 8)
+        #expect(exact.count == 1)
+        #expect(exact[0].width == 344)
+        // One point narrower: the last chip wraps.
+        let tight = FlowLayout.rows(Array(repeating: chip, count: 4), width: 343, spacing: 8)
+        #expect(tight.map(\.indices) == [[0, 1, 2], [3]])
+        #expect(FlowLayout.rows([], width: 300, spacing: 8).isEmpty)
+    }
 }
