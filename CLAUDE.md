@@ -86,7 +86,8 @@ Terris/
                              denominator), CountryCentroids, AirportDatabase,
                              TravelStatus, CountryFacts
     Services/                OfflineCountryResolver (nonisolated, used off-main by the
-                             scan), AssetImage (PHAsset thumbnails)
+                             scan), AssetImage (PHAsset thumbnails, with PhotoProblem:
+                             no access, not shared, not on this device, didn't load)
     Resources/Fonts          Outfit-Bold (the wordmark only; OFL in docs/brand)
     Assets.xcassets          AppIcon (light, dark, tinted), AccentColor
   TerrisTests/               Swift Testing: projections, figures, country, search,
