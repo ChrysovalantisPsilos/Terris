@@ -101,9 +101,14 @@ batches; never push WIP just to see if it compiles.
   (the whole .p8, BEGIN/END lines included), `APPLE_TEAM_ID`. Terris has
   its **own** team API key ("Terris CI", Admin role, which cloud signing
   needs), never Budgeer's (owner's rule, Oct 2026). The issuer id and team id
-  are the account's, so they match Budgeer's by nature. The run revokes earlier runs' "Created via
-  API" development certificates (`scripts/asc/certificates.mjs`, shared with
-  Budgeer's team), so don't run it while a Budgeer upload is signing.
+  are the account's, so they match Budgeer's by nature. **Certificates (owner's rule, 2 Oct 2026): the Terris pipeline
+  must never revoke Budgeer's certificates.** At the end of each run it
+  revokes only the development certificate that run created, matched by
+  fingerprint against the runner's keychain (`scripts/asc/certificates.mjs`,
+  tested by `certificates.test.mjs`). There is no "revoke all Created via
+  API" step. If the team's development-certificate slots are ever full of
+  Budgeer's leftovers, the archive fails: free a slot in the developer portal
+  or let Budgeer's own pipeline clean up, never from Terris.
   One-time steps by hand: the app record in App Store Connect
   (`com.chrysovalantis.Terris`), and the iCloud container
   `iCloud.com.chrysovalantis.Terris` registered in the developer portal and
