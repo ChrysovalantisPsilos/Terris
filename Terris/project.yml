@@ -109,6 +109,12 @@ schemes:
         Terris: all
         TerrisTests: [test]
         TerrisUITests: [test]
+    run:
+      config: Debug
+      # Tick once in Edit Scheme → Run → Arguments to create the CloudKit
+      # schema (see Persistence.swift), then untick.
+      commandLineArguments:
+        "-initCloudKitSchema": false
     test:
       config: Debug
       targets:

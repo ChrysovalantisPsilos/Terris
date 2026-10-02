@@ -108,10 +108,14 @@ batches; never push WIP just to see if it compiles.
   (`com.chrysovalantis.Terris`), and the iCloud container
   `iCloud.com.chrysovalantis.Terris` registered in the developer portal and
   assigned to the App ID (cloud signing can't create containers, as with
-  Budgeer's App Groups). The CloudKit schema (model v2) was deployed to
-  Production by the owner on 2 Oct 2026; every later model change must be
-  run once in a debug build and deployed again (CloudKit Console → Deploy
-  Schema Changes) before the TestFlight build that needs it.
+  Budgeer's App Groups). **CloudKit schema:** CloudKit only creates record
+  types lazily as data syncs, so the schema is made on purpose: in Xcode,
+  Edit Scheme → Run → Arguments, tick `-initCloudKitSchema`, run once
+  (Debug) on a device signed in to iCloud, untick; the console log says
+  "CloudKit schema: created". Then CloudKit Console → the container →
+  Development shows the `CD_…` record types → Deploy Schema Changes to
+  Production. Repeat after every model change, before the TestFlight build
+  that needs it. (2 Oct 2026: both environments were still empty.)
   `ITSAppUsesNonExemptEncryption` is NO.
 - **CI minutes are scarce** (macOS costs 10x). `ios-app.yml` runs on pushes
   to develop that touch the app, on pull requests, and by hand. Snapshots are
