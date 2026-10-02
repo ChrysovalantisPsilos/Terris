@@ -16,6 +16,8 @@ struct RootView: View {
     @AppStorage("hasSeenTour") private var hasSeenTour = false
     @State private var showingOnboarding = false
     @State private var showingTour = false
+    /// True while the launch animation plays; first-run screens wait for it.
+    @Environment(\.isLaunching) private var isLaunching
 
     var body: some View {
         @Bindable var router = router
@@ -49,19 +51,30 @@ struct RootView: View {
         .fullScreenCover(isPresented: $showingTour) {
             TourScreen { hasSeenTour = true }
         }
-        .onAppear {
-            guard !hasOnboarded else {
-                // People who onboarded before the tour existed see it once.
-                if !hasSeenTour { showingTour = true }
-                return
-            }
-            // People who already marked countries skip the first-launch scan.
-            if store.countryRecords().contains(where: { $0.status != .none }) {
-                hasOnboarded = true
-                if !hasSeenTour { showingTour = true }
-            } else {
-                showingOnboarding = true
-            }
+        .onChange(of: isLaunching, initial: true) { _, launching in
+            guard !launching else { return }
+            presentFirstRunScreens()
         }
     }
+
+    /// The first-launch scan, then the tour, each once; after the splash.
+    private func presentFirstRunScreens() {
+        guard !hasOnboarded else {
+            // People who onboarded before the tour existed see it once.
+            if !hasSeenTour { showingTour = true }
+            return
+        }
+        // People who already marked countries skip the first-launch scan.
+        if store.countryRecords().contains(where: { $0.status != .none }) {
+            hasOnboarded = true
+            if !hasSeenTour { showingTour = true }
+        } else {
+            showingOnboarding = true
+        }
+    }
+}
+
+extension EnvironmentValues {
+    /// Set by the app while the launch animation is on screen.
+    @Entry var isLaunching = false
 }

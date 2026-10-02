@@ -1,212 +1,842 @@
 {
-  "FR": [
-    "France is the most visited country in the world by international tourist arrivals.",
-    "It has more time zones than any other country — 12 — thanks to its overseas territories.",
-    "The Louvre in Paris is the world's most-visited art museum."
-  ],
-  "IT": [
-    "Italy is home to more UNESCO World Heritage Sites than any other country.",
-    "The city of Rome is older than the country of Italy, which only unified in 1861.",
-    "Espresso, pizza, and Parmesan all originate here."
-  ],
-  "ES": [
-    "Spain has a 'siesta' tradition, though far fewer people take one today.",
-    "It produces roughly half of the world's olive oil.",
-    "La Sagrada Família in Barcelona has been under construction since 1882."
-  ],
-  "JP": [
-    "Japan has more than 6,800 islands.",
-    "Vending machines are ubiquitous — roughly one for every 30 people.",
-    "It is home to the world's oldest continuously operating company traditions."
-  ],
-  "US": [
-    "The United States has no official national language at the federal level.",
-    "It spans six time zones across its states.",
-    "Yellowstone, established 1872, was the world's first national park."
-  ],
-  "GB": [
-    "The United Kingdom is made up of four nations: England, Scotland, Wales, and Northern Ireland.",
-    "London's Underground is the world's oldest underground railway, opened in 1863.",
-    "The UK has no single written constitution."
-  ],
-  "DE": [
-    "Germany has over 1,500 different types of beer.",
-    "There is no federal speed limit on stretches of the Autobahn.",
-    "It shares borders with nine countries — more than almost any nation in Europe."
-  ],
-  "GR": [
-    "Greece has thousands of islands, but only a couple hundred are inhabited.",
-    "It is regarded as the birthplace of democracy and the Olympic Games.",
-    "No point in Greece is more than about 140 km from the sea."
-  ],
-  "PT": [
-    "Portugal is one of the oldest nation-states in Europe, with borders largely unchanged since 1139.",
-    "It's the world's largest producer of cork.",
-    "The Vasco da Gama Bridge in Lisbon is one of the longest in Europe."
-  ],
-  "NL": [
-    "About a quarter of the Netherlands lies below sea level.",
-    "It has more bicycles than people.",
-    "The country is the world's second-largest agricultural exporter by value."
-  ],
-  "CH": [
-    "Switzerland has four official languages: German, French, Italian, and Romansh.",
-    "It hasn't been at war since 1815 and maintains armed neutrality.",
-    "Chocolate consumption per person here is among the highest in the world."
-  ],
-  "NO": [
-    "Norway's coastline, including fjords, stretches over 100,000 km.",
-    "It introduced salmon sushi to Japan in the 1980s.",
-    "The sun doesn't fully set for weeks in summer above the Arctic Circle."
-  ],
-  "SE": [
-    "Sweden has among the most islands of any country — over 260,000.",
-    "It gave the world the zipper, the pacemaker, and Spotify.",
-    "Recycling is so efficient the country imports waste to fuel power plants."
-  ],
-  "IS": [
-    "Iceland runs almost entirely on renewable geothermal and hydro energy.",
-    "It has no mosquitoes.",
-    "The world's oldest still-functioning parliament, the Althing, was founded here in 930 AD."
-  ],
-  "IE": [
-    "Ireland is known as the Emerald Isle for its year-round green landscape.",
-    "Halloween traces back to the ancient Irish festival of Samhain.",
-    "There are no wild snakes native to Ireland."
-  ],
-  "EG": [
-    "The Great Pyramid of Giza is the only surviving Wonder of the Ancient World.",
-    "Egypt's civilization spans over 5,000 years of recorded history.",
-    "The Nile is generally considered the longest river in the world."
-  ],
-  "MA": [
-    "Morocco's city of Fez has one of the world's largest car-free urban areas.",
-    "It's one of the few countries with both Atlantic and Mediterranean coastlines.",
-    "Mint tea is a national symbol of hospitality."
-  ],
-  "ZA": [
-    "South Africa has three capital cities: Pretoria, Cape Town, and Bloemfontein.",
-    "It has 11 official languages.",
-    "Table Mountain is one of the oldest mountains on Earth."
-  ],
-  "KE": [
-    "Kenya's Great Rift Valley is visible from space.",
-    "The annual wildebeest migration is one of the largest on the planet.",
-    "It straddles the equator."
+  "AD": [
+    "Andorra is a small landlocked country high in the Pyrenees, between France and Spain.",
+    "It is the only country where Catalan is the sole official language.",
+    "The capital, Andorra la Vella, is the highest capital city in Europe, at over 1,000 metres."
   ],
   "AE": [
     "The UAE is home to the world's tallest building, the Burj Khalifa.",
     "Dubai was a modest pearling and trading port only decades ago.",
     "Roughly 200 nationalities live in the country."
   ],
-  "TR": [
-    "Turkey straddles two continents, Europe and Asia.",
-    "Istanbul is the only major city that sits on two continents.",
-    "It's home to Göbekli Tepe, among the oldest known temple sites on Earth."
+  "AF": [
+    "Afghanistan is home to Band-e Amir, a chain of deep blue lakes held back by natural travertine dams.",
+    "The Minaret of Jam, a 12th-century brick tower about 65 metres tall, stands in a remote mountain valley.",
+    "Lapis lazuli has been mined in the Badakhshan region for over 6,000 years."
   ],
-  "IN": [
-    "India is the world's most populous country.",
-    "It has 22 officially recognized languages and hundreds more spoken.",
-    "The game of chess originated here."
+  "AL": [
+    "Albanians call their country Shqipëria, often translated as the Land of the Eagles.",
+    "Butrint, an ancient Greek and Roman city in the far south, is a UNESCO World Heritage Site.",
+    "Berat is nicknamed the City of a Thousand Windows for its rows of Ottoman-era houses."
   ],
-  "TH": [
-    "Thailand is the only Southeast Asian country never colonized by a European power.",
-    "Its capital's full ceremonial name is the longest city name in the world.",
-    "There are more than 40,000 Buddhist temples across the country."
+  "AM": [
+    "Armenia has its own alphabet, created by the scholar Mesrop Mashtots around 405 AD.",
+    "The world's oldest known leather shoe, about 5,500 years old, was found in Armenia's Areni-1 cave.",
+    "Lake Sevan, lying at about 1,900 metres, is the largest lake in the Caucasus region."
   ],
-  "CN": [
-    "China is the world's most populous country alongside India.",
-    "The Great Wall stretches more than 21,000 km in total.",
-    "It spans five geographic time zones but officially uses just one."
-  ],
-  "AU": [
-    "Australia is the only nation that is also a continent.",
-    "It's home to some of the world's oldest living cultures, over 60,000 years old.",
-    "The Great Barrier Reef is the largest living structure on Earth."
-  ],
-  "NZ": [
-    "New Zealand was the first country to give women the right to vote, in 1893.",
-    "There are roughly five sheep for every person.",
-    "No part of the country is more than about 120 km from the sea."
-  ],
-  "BR": [
-    "Brazil is home to about 60% of the Amazon rainforest.",
-    "It's the largest country in South America by area and population.",
-    "Portuguese is the official language, unlike its Spanish-speaking neighbors."
+  "AO": [
+    "Kalandula Falls on the Lucala River is one of the largest waterfalls in Africa.",
+    "The giant sable antelope, a national symbol, lives in the wild only in Angola.",
+    "Kizomba, a popular partner dance, originated in Angola in the 1980s."
   ],
   "AR": [
     "Argentina contains Aconcagua, the highest peak in the Americas.",
     "The tango was born in the neighborhoods of Buenos Aires.",
     "It stretches from subtropical north to sub-Antarctic south."
   ],
-  "PE": [
-    "Peru is home to Machu Picchu, the iconic Inca citadel.",
-    "There are over 3,000 varieties of potato native to the country.",
-    "The Amazon River is generally considered to begin in the Peruvian Andes."
-  ],
-  "MX": [
-    "Mexico introduced chocolate, chilies, and corn to the world.",
-    "Mexico City is built on the site of the Aztec capital Tenochtitlan.",
-    "It has 35 UNESCO World Heritage Sites, among the most in the Americas."
-  ],
-  "CA": [
-    "Canada has the longest coastline of any country in the world.",
-    "It has two official languages: English and French.",
-    "About 20% of the world's fresh water lies within its borders."
-  ],
-  "RU": [
-    "Russia is the largest country on Earth, spanning 11 time zones.",
-    "Lake Baikal holds around 20% of the world's unfrozen fresh water.",
-    "It borders 14 countries by land."
-  ],
-  "KR": [
-    "South Korea has one of the fastest average internet speeds in the world.",
-    "Its capital, Seoul, is one of the most densely populated major cities.",
-    "The Korean alphabet, Hangul, was designed to be easy to learn."
-  ],
-  "VN": [
-    "Vietnam is the world's second-largest coffee exporter.",
-    "It has a coastline of over 3,000 km.",
-    "The city of Hội An is a remarkably preserved ancient trading port."
-  ],
-  "ID": [
-    "Indonesia is the world's largest archipelago, with over 17,000 islands.",
-    "It sits on the Pacific Ring of Fire with more than 120 active volcanoes.",
-    "Hundreds of distinct languages are spoken across the country."
-  ],
-  "SG": [
-    "Singapore is one of only three surviving city-states in the world.",
-    "It has four official languages: English, Malay, Mandarin, and Tamil.",
-    "The country is famed for its lush 'garden city' urban planning."
-  ],
   "AT": [
     "Austria is the birthplace of Mozart and the classical music tradition of Vienna.",
     "Around 60% of the country is covered by the Alps.",
     "Vienna regularly ranks among the world's most liveable cities."
+  ],
+  "AU": [
+    "Australia is the only nation that is also a continent.",
+    "It's home to some of the world's oldest living cultures, over 60,000 years old.",
+    "The Great Barrier Reef is the largest living structure on Earth."
+  ],
+  "AZ": [
+    "Azerbaijan is called the 'Land of Fire' for its natural gas flames, like the ever-burning hillside of Yanar Dag.",
+    "Gobustan holds more than 6,000 ancient rock carvings, some dating back to the Stone Age.",
+    "The country has hundreds of mud volcanoes, more than almost anywhere else on Earth."
+  ],
+  "BA": [
+    "Mostar's Old Bridge, first built in 1566, is famous for divers leaping into the Neretva River.",
+    "The capital, Sarajevo, hosted the Winter Olympic Games in 1984.",
+    "The country has a short stretch of Adriatic coast, about 20 km long, around the town of Neum."
+  ],
+  "BD": [
+    "Bangladesh is home to part of the Sundarbans, the largest mangrove forest in the world and a haven for Bengal tigers.",
+    "Cox's Bazar has one of the longest unbroken sandy beaches in the world, stretching about 120 km.",
+    "Most of the country lies on the Ganges delta, the largest river delta on Earth."
   ],
   "BE": [
     "Belgium is often called the capital of Europe, hosting core EU institutions.",
     "It produces hundreds of distinct varieties of beer.",
     "The French fry and the modern praline both have strong Belgian roots."
   ],
+  "BF": [
+    "The name Burkina Faso means 'land of upright people'.",
+    "The capital, Ouagadougou, hosts FESPACO, Africa's largest film festival.",
+    "It was known as Upper Volta until 1984."
+  ],
+  "BG": [
+    "Bulgaria's Rose Valley produces much of the world's rose oil, a key ingredient in perfume.",
+    "The Cyrillic script was developed in the First Bulgarian Empire in the 10th century.",
+    "In Bulgaria, a nod of the head traditionally means no and a shake means yes."
+  ],
+  "BH": [
+    "Bahrain was the heart of the ancient Dilmun civilisation, whose capital at Qal'at al-Bahrain is a UNESCO site.",
+    "Its pearl-diving heritage is honoured by the Pearling Path in Muharraq, a UNESCO World Heritage Site.",
+    "The King Fahd Causeway, about 25 km long, links the island to the Arabian mainland."
+  ],
+  "BI": [
+    "Lake Tanganyika, on its western border, is the second-deepest lake in the world.",
+    "Its royal drummers perform a ritual dance listed by UNESCO as intangible heritage.",
+    "Gitega became the political capital in 2019, while Bujumbura remains the economic hub."
+  ],
+  "BJ": [
+    "The Royal Palaces of Abomey, seat of the old Kingdom of Dahomey, are a UNESCO World Heritage Site.",
+    "Ganvie is a village built entirely on stilts in Lake Nokoué.",
+    "The official capital is Porto-Novo, while Cotonou is the largest city."
+  ],
+  "BN": [
+    "Kampong Ayer in the capital is one of the largest water villages in the world, built on stilts over the river.",
+    "Brunei shares the island of Borneo with Malaysia and Indonesia.",
+    "Much of the country is covered in rainforest, protected in places like Ulu Temburong National Park."
+  ],
+  "BR": [
+    "Brazil is home to about 60% of the Amazon rainforest.",
+    "It's the largest country in South America by area and population.",
+    "Portuguese is the official language, unlike its Spanish-speaking neighbors."
+  ],
+  "BT": [
+    "Paro Taktsang, the Tiger's Nest monastery, clings to a cliff about 900 metres above the Paro valley.",
+    "Bhutan's Gangkhar Puensum is thought to be the highest unclimbed mountain in the world.",
+    "Archery is the national sport, and tournaments come with singing, dancing and friendly banter."
+  ],
+  "BW": [
+    "The Okavango Delta is one of the world's largest inland deltas and a UNESCO World Heritage Site.",
+    "The Makgadikgadi Pans are among the largest salt flats in the world.",
+    "The Tsodilo Hills hold over 4,500 rock paintings and are known as the 'Louvre of the Desert'."
+  ],
+  "BY": [
+    "Belarus shares Białowieża Forest with Poland, one of the last primeval forests in Europe.",
+    "The forest is home to the European bison, the heaviest land animal in Europe.",
+    "Draniki, crispy potato pancakes served with sour cream, are a beloved national dish."
+  ],
+  "CA": [
+    "Canada has the longest coastline of any country in the world.",
+    "It has two official languages: English and French.",
+    "About 20% of the world's fresh water lies within its borders."
+  ],
+  "CD": [
+    "The Congo River is the deepest river in the world, reaching depths of over 220 metres.",
+    "Virunga, founded in 1925, is Africa's oldest national park.",
+    "Bonobos, close relatives of chimpanzees, live in the wild only in this country."
+  ],
+  "CF": [
+    "Forest elephants gather in large numbers at the Dzanga Bai clearing in the southwest.",
+    "Sango and French are the country's official languages.",
+    "The capital, Bangui, sits on the banks of the Ubangi River."
+  ],
+  "CG": [
+    "The capital, Brazzaville, faces Kinshasa across the Congo River, one of the closest pairs of capitals on Earth.",
+    "Odzala-Kokoua National Park is a stronghold of western lowland gorillas.",
+    "Brazzaville's 'sapeurs' are famous for their elegant and flamboyant fashion."
+  ],
+  "CH": [
+    "Switzerland has four official languages: German, French, Italian, and Romansh.",
+    "It hasn't been at war since 1815 and maintains armed neutrality.",
+    "Chocolate consumption per person here is among the highest in the world."
+  ],
+  "CI": [
+    "Ivory Coast is the world's largest producer of cocoa beans.",
+    "The Basilica of Our Lady of Peace in Yamoussoukro is one of the largest churches in the world.",
+    "Taï National Park protects one of the last large areas of primary rainforest in West Africa."
+  ],
+  "CM": [
+    "Cameroon is often called 'Africa in miniature' for its varied landscapes and cultures.",
+    "Mount Cameroon, an active volcano over 4,000 metres high, rises close to the Atlantic coast.",
+    "Both French and English are official languages."
+  ],
+  "CN": [
+    "China is the world's most populous country alongside India.",
+    "The Great Wall stretches more than 21,000 km in total.",
+    "It spans five geographic time zones but officially uses just one."
+  ],
+  "CV": [
+    "The archipelago is made up of ten volcanic islands in the Atlantic Ocean.",
+    "Pico do Fogo, an active volcano on Fogo island, is the country's highest point.",
+    "Morna, the soulful music made famous by Cesária Évora, is on UNESCO's intangible heritage list."
+  ],
+  "CY": [
+    "Cyprus is the third-largest island in the Mediterranean, after Sicily and Sardinia.",
+    "Halloumi, the squeaky cheese that holds its shape on the grill, comes from Cyprus.",
+    "Choirokoitia is one of the best-preserved Neolithic settlements in the eastern Mediterranean."
+  ],
   "CZ": [
     "Czechia has the highest beer consumption per person in the world.",
     "Prague Castle is the largest ancient castle complex in the world.",
     "The word 'robot' first appeared in a 1920 Czech play."
   ],
-  "PL": [
-    "Poland is home to Europe's largest surviving primeval forest, Białowieża.",
-    "It has one of the oldest salt mines in the world, at Wieliczka.",
-    "The country moved its entire borders westward after World War II."
+  "DE": [
+    "Germany has over 1,500 different types of beer.",
+    "There is no federal speed limit on stretches of the Autobahn.",
+    "It shares borders with nine countries — more than almost any nation in Europe."
+  ],
+  "DJ": [
+    "Lake Assal lies about 155 metres below sea level, the lowest point in Africa.",
+    "Whale sharks gather in the Gulf of Tadjoura during the winter months.",
+    "Lac Abbé is known for its tall limestone chimneys that let off steam."
+  ],
+  "DK": [
+    "LEGO was founded in Billund; its name comes from the Danish 'leg godt', meaning 'play well'.",
+    "Denmark's flag, the Dannebrog, is often called the oldest national flag still in use.",
+    "No point in the country is more than about 50 km from the sea."
+  ],
+  "DZ": [
+    "Algeria is the largest country in Africa by area.",
+    "The Sahara Desert covers most of the country's land.",
+    "Tassili n'Ajjer holds thousands of prehistoric rock paintings and engravings."
+  ],
+  "EE": [
+    "Estonia has more than 2,000 islands, the largest of which is Saaremaa.",
+    "Tallinn's Old Town is one of the best-preserved medieval centres in Europe and a UNESCO site.",
+    "The software behind Skype was written by Estonian developers in Tallinn."
+  ],
+  "EG": [
+    "The Great Pyramid of Giza is the only surviving Wonder of the Ancient World.",
+    "Egypt's civilization spans over 5,000 years of recorded history.",
+    "The Nile is generally considered the longest river in the world."
+  ],
+  "ER": [
+    "The capital, Asmara, is a UNESCO World Heritage Site famed for its modernist architecture.",
+    "Asmara's Fiat Tagliero building, a 1930s service station, is shaped like an aeroplane.",
+    "The Dahlak Archipelago, off the coast in the Red Sea, has around 200 islands."
+  ],
+  "ES": [
+    "Spain has a 'siesta' tradition, though far fewer people take one today.",
+    "It produces roughly half of the world's olive oil.",
+    "La Sagrada Família in Barcelona has been under construction since 1882."
+  ],
+  "ET": [
+    "Ethiopia is widely considered the birthplace of coffee.",
+    "Lalibela is famous for its churches carved out of solid rock around 800 years ago.",
+    "The country uses its own calendar, which runs about seven to eight years behind the Gregorian one."
+  ],
+  "FI": [
+    "Finland has around 188,000 lakes, earning it the nickname 'Land of a Thousand Lakes'.",
+    "Sauna is a Finnish word, and Finnish sauna culture is on UNESCO's intangible heritage list.",
+    "In Lapland, the sun does not set at all for weeks around midsummer."
+  ],
+  "FJ": [
+    "Fiji is made up of more than 300 islands, about a third of which are inhabited.",
+    "'Bula' is the warm Fijian greeting you will hear everywhere.",
+    "Kava, a drink made from the root of a pepper plant, is shared in traditional ceremonies."
+  ],
+  "FM": [
+    "Nan Madol, a ruined city of basalt built on artificial islets off Pohnpei, is a UNESCO site.",
+    "The island of Yap is famous for its giant stone money, called rai.",
+    "The country is made up of four states: Yap, Chuuk, Pohnpei and Kosrae."
+  ],
+  "FR": [
+    "France is the most visited country in the world by international tourist arrivals.",
+    "It has more time zones than any other country — 12 — thanks to its overseas territories.",
+    "The Louvre in Paris is the world's most-visited art museum."
+  ],
+  "GA": [
+    "Gabon created 13 national parks at once in 2002.",
+    "In Loango National Park, elephants and hippos can be seen on the Atlantic beaches.",
+    "Albert Schweitzer founded his famous hospital at Lambaréné in 1913."
+  ],
+  "GB": [
+    "The United Kingdom is made up of four nations: England, Scotland, Wales, and Northern Ireland.",
+    "London's Underground is the world's oldest underground railway, opened in 1863.",
+    "The UK has no single written constitution."
+  ],
+  "GE": [
+    "Georgia has some of the oldest evidence of winemaking in the world, dating back about 8,000 years.",
+    "Traditional Georgian wine is fermented in large clay jars called qvevri, buried in the ground.",
+    "Khachapuri, a cheese-filled bread, is a national favourite; the Adjarian version comes topped with an egg."
+  ],
+  "GH": [
+    "Lake Volta is one of the largest artificial lakes in the world by surface area.",
+    "Kente cloth, woven in bright narrow strips, comes from the Ashanti and Ewe peoples.",
+    "Kakum National Park has a canopy walkway suspended high above the rainforest."
+  ],
+  "GM": [
+    "The Gambia is the smallest country on mainland Africa.",
+    "It is surrounded by Senegal on all sides except its short Atlantic coastline.",
+    "The Wassu stone circles are part of the Senegambian Stone Circles UNESCO World Heritage Site."
+  ],
+  "GN": [
+    "Guinea is called the 'water tower of West Africa' as the Niger, Senegal and Gambia rivers rise there.",
+    "The Fouta Djallon highlands are known for their waterfalls and cool plateaus.",
+    "Mount Nimba Strict Nature Reserve, shared with Ivory Coast, is a UNESCO World Heritage Site."
+  ],
+  "GQ": [
+    "It is the only country in Africa with Spanish as an official language.",
+    "The country is made up of a mainland region, Río Muni, and islands including Bioko.",
+    "Pico Basilé, a volcano on Bioko Island, is the country's highest point."
+  ],
+  "GR": [
+    "Greece has thousands of islands, but only a couple hundred are inhabited.",
+    "It is regarded as the birthplace of democracy and the Olympic Games.",
+    "No point in Greece is more than about 140 km from the sea."
+  ],
+  "GW": [
+    "The Bijagós Archipelago is made up of around 88 islands and islets.",
+    "Hippos on Orango Island are famous for swimming in the sea.",
+    "Portuguese is the official language, while Kriol is the most widely spoken."
   ],
   "HR": [
     "Croatia has more than a thousand islands along its Adriatic coast.",
     "The necktie originated here — 'cravat' comes from 'Croat'.",
     "Dubrovnik's old town is a UNESCO World Heritage Site."
   ],
+  "HU": [
+    "The Rubik's Cube was invented in 1974 by the Hungarian architect Ernő Rubik.",
+    "Lake Balaton is the largest lake in Central Europe.",
+    "The capital, Budapest, was created in 1873 by uniting the towns of Buda, Óbuda and Pest."
+  ],
+  "ID": [
+    "Indonesia is the world's largest archipelago, with over 17,000 islands.",
+    "It sits on the Pacific Ring of Fire with more than 120 active volcanoes.",
+    "Hundreds of distinct languages are spoken across the country."
+  ],
+  "IE": [
+    "Ireland is known as the Emerald Isle for its year-round green landscape.",
+    "Halloween traces back to the ancient Irish festival of Samhain.",
+    "There are no wild snakes native to Ireland."
+  ],
+  "IL": [
+    "The shore of the Dead Sea is the lowest point on land on Earth, more than 400 metres below sea level.",
+    "Masada, a clifftop fortress built by King Herod, overlooks the Dead Sea and is a UNESCO site.",
+    "Makhtesh Ramon in the Negev desert is a vast erosion crater about 40 km long."
+  ],
+  "IN": [
+    "India is the world's most populous country.",
+    "It has 22 officially recognized languages and hundreds more spoken.",
+    "The game of chess originated here."
+  ],
+  "IQ": [
+    "Iraq lies in ancient Mesopotamia, the land between the Tigris and Euphrates rivers.",
+    "Cuneiform, one of the world's earliest writing systems, developed in Sumer in what is now southern Iraq.",
+    "The Great Ziggurat of Ur, built over 4,000 years ago, still stands near the city of Nasiriyah."
+  ],
+  "IR": [
+    "Persepolis, the grand ceremonial capital of the Achaemenid Empire, was founded around 518 BC.",
+    "Iran's Lut Desert has recorded some of the hottest land surface temperatures ever measured on Earth.",
+    "Hand-knotted Persian carpets come from a weaving tradition thousands of years old."
+  ],
+  "IS": [
+    "Iceland runs almost entirely on renewable geothermal and hydro energy.",
+    "It has no mosquitoes.",
+    "The world's oldest still-functioning parliament, the Althing, was founded here in 930 AD."
+  ],
+  "IT": [
+    "Italy is home to more UNESCO World Heritage Sites than any other country.",
+    "The city of Rome is older than the country of Italy, which only unified in 1861.",
+    "Espresso, pizza, and Parmesan all originate here."
+  ],
+  "JO": [
+    "Jordan is home to Petra, the rose-red city carved into rock by the Nabataeans.",
+    "The red desert of Wadi Rum has stood in for Mars in several Hollywood films.",
+    "The Dead Sea is so salty that swimmers float effortlessly on its surface."
+  ],
+  "JP": [
+    "Japan has more than 6,800 islands.",
+    "Vending machines are ubiquitous — roughly one for every 30 people.",
+    "It is home to the world's oldest continuously operating company traditions."
+  ],
+  "KE": [
+    "Kenya's Great Rift Valley is visible from space.",
+    "The annual wildebeest migration is one of the largest on the planet.",
+    "It straddles the equator."
+  ],
+  "KG": [
+    "Issyk-Kul is one of the largest mountain lakes in the world, and it does not freeze in winter.",
+    "The Epic of Manas is one of the longest epic poems in the world, with around half a million lines.",
+    "The national flag shows a tunduk, the crown at the top of a traditional yurt."
+  ],
+  "KH": [
+    "Cambodia is home to Angkor Wat, the largest religious monument in the world.",
+    "Angkor Wat appears on the national flag, a rare honour for a building.",
+    "The Tonle Sap river reverses its flow each rainy season, swelling Southeast Asia's largest lake."
+  ],
+  "KI": [
+    "Kiribati is the only country that lies in all four hemispheres.",
+    "Its Line Islands are among the first places on Earth to greet each new day.",
+    "Kiritimati, or Christmas Island, is one of the largest coral atolls in the world by land area."
+  ],
+  "KM": [
+    "Ylang-ylang grown on the islands is a key ingredient in many famous perfumes.",
+    "Mount Karthala, an active volcano on Grande Comore, is the country's highest point.",
+    "Coelacanths, fish once thought extinct, live in the deep waters off the islands."
+  ],
+  "KP": [
+    "Mount Paektu, the highest peak on the Korean Peninsula, holds a crater lake called Heaven Lake.",
+    "Naengmyeon, cold buckwheat noodles in chilled broth, is a classic dish from Pyongyang.",
+    "The Koguryo tombs, with wall paintings over 1,500 years old, are a UNESCO World Heritage Site."
+  ],
+  "KR": [
+    "South Korea has one of the fastest average internet speeds in the world.",
+    "Its capital, Seoul, is one of the most densely populated major cities.",
+    "The Korean alphabet, Hangul, was designed to be easy to learn."
+  ],
+  "KW": [
+    "The Kuwait Towers, with their blue-green tiled spheres, are the country's best-known landmark.",
+    "Failaka Island holds the remains of an ancient Greek settlement from the time of Alexander the Great.",
+    "Kuwait has a long seafaring history of building wooden dhows for trade and pearl diving."
+  ],
+  "KZ": [
+    "Kazakhstan is the largest landlocked country in the world.",
+    "The first human spaceflight, Yuri Gagarin's in 1961, launched from the Baikonur Cosmodrome.",
+    "The apple is thought to have originated in the wild forests of the Tian Shan, near Almaty."
+  ],
+  "LA": [
+    "Laos is the only landlocked country in Southeast Asia.",
+    "The Plain of Jars is scattered with thousands of ancient stone jars, some up to 3 metres tall.",
+    "Luang Prabang, a former royal capital on the Mekong, is a UNESCO World Heritage town."
+  ],
+  "LB": [
+    "Byblos is one of the oldest continuously inhabited cities in the world.",
+    "The cedar tree on the national flag still grows in ancient groves such as the Cedars of God.",
+    "Baalbek has some of the largest Roman temples ever built, including the Temple of Bacchus."
+  ],
+  "LI": [
+    "Liechtenstein is one of only two doubly landlocked countries, along with Uzbekistan.",
+    "It is only about 25 km long, tucked between Switzerland and Austria.",
+    "Vaduz Castle, perched above the capital, is still home to the princely family."
+  ],
+  "LK": [
+    "Sigiriya, the Lion Rock, is a 5th-century palace and fortress built on top of a towering rock.",
+    "Ceylon tea, grown in the central highlands, takes its name from the island's former name.",
+    "Ratnapura, meaning 'City of Gems', has been a centre of sapphire mining for centuries."
+  ],
+  "LR": [
+    "Liberia is Africa's oldest republic, declared independent in 1847.",
+    "The capital, Monrovia, is named after US President James Monroe.",
+    "Sapo National Park protects a vast rainforest that is home to rare pygmy hippos."
+  ],
+  "LS": [
+    "Lesotho is completely surrounded by South Africa.",
+    "Its lowest point is about 1,400 metres above sea level, the highest low point of any country.",
+    "Maletsunyane Falls plunges about 190 metres in a single drop."
+  ],
+  "LT": [
+    "The Hill of Crosses near Šiauliai is covered with countless crosses left by pilgrims.",
+    "The Curonian Spit, a long, thin strip of huge sand dunes, is a UNESCO World Heritage Site.",
+    "Lithuanian is considered one of the most archaic living Indo-European languages."
+  ],
+  "LU": [
+    "Luxembourg is the world's last remaining grand duchy.",
+    "In 2020 it became the first country to make all public transport free nationwide.",
+    "The old quarters and fortifications of Luxembourg City are a UNESCO World Heritage Site."
+  ],
+  "LV": [
+    "Riga has one of the largest collections of Art Nouveau buildings in the world.",
+    "Latvia's Song and Dance Festival gathers tens of thousands of singers and is UNESCO-listed.",
+    "About half of the country is covered by forest."
+  ],
+  "LY": [
+    "Leptis Magna is one of the best-preserved Roman cities in the Mediterranean.",
+    "Ghadames, the 'pearl of the desert', is an oasis town with shaded, covered alleyways.",
+    "The Tadrart Acacus mountains hold rock art dating back thousands of years."
+  ],
+  "MA": [
+    "Morocco's city of Fez has one of the world's largest car-free urban areas.",
+    "It's one of the few countries with both Atlantic and Mediterranean coastlines.",
+    "Mint tea is a national symbol of hospitality."
+  ],
+  "MC": [
+    "Monaco is the second-smallest country in the world, after Vatican City.",
+    "The Monaco Grand Prix has raced through the city's streets since 1929.",
+    "The Oceanographic Museum, once directed by Jacques Cousteau, is built into a cliff above the sea."
+  ],
+  "MD": [
+    "Mileștii Mici holds a Guinness World Record for the largest wine collection.",
+    "Orheiul Vechi is a cave monastery carved into limestone cliffs above the Răut River.",
+    "Mărțișor, a red-and-white thread worn on 1 March, is a cherished custom to welcome spring."
+  ],
+  "ME": [
+    "Montenegro's name means 'Black Mountain', after the dark forests of Mount Lovćen.",
+    "The Bay of Kotor is a winding, fjord-like bay ringed by steep mountains.",
+    "The Tara River Canyon is one of the deepest canyons in Europe, at about 1,300 metres."
+  ],
+  "MG": [
+    "Madagascar is the fourth-largest island in the world.",
+    "Lemurs are native to Madagascar and found in the wild nowhere else.",
+    "The Avenue of the Baobabs near Morondava is lined with towering ancient trees."
+  ],
+  "MH": [
+    "The Marshall Islands are made up of 29 coral atolls and 5 single islands.",
+    "Marshallese navigators used stick charts made of palm ribs and shells to map ocean swells.",
+    "The islands form two parallel chains, Ratak (sunrise) and Ralik (sunset)."
+  ],
+  "MK": [
+    "Lake Ohrid is one of the oldest and deepest lakes in Europe.",
+    "Mother Teresa was born in the capital, Skopje, in 1910.",
+    "Matka Canyon, just outside Skopje, has medieval monasteries and deep underwater caves."
+  ],
+  "ML": [
+    "The Great Mosque of Djenné is the largest mud-brick building in the world.",
+    "Timbuktu was a renowned centre of learning, known for its ancient manuscripts.",
+    "The Dogon people live in villages along the cliffs of the Bandiagara Escarpment."
+  ],
+  "MM": [
+    "Bagan has more than 2,000 surviving ancient temples and pagodas spread across a wide plain.",
+    "Fishermen on Inle Lake are famous for rowing with one leg wrapped around the oar.",
+    "Thanaka, a paste made from ground tree bark, is worn on the face as a cosmetic and sunscreen."
+  ],
+  "MN": [
+    "Mongolia is the most sparsely populated sovereign country in the world.",
+    "The capital, Ulaanbaatar, is the coldest national capital in the world.",
+    "Some of the first dinosaur eggs known to science were found in the Gobi Desert in the 1920s."
+  ],
+  "MR": [
+    "The Richat Structure, nicknamed the 'Eye of the Sahara', is a vast circular rock formation.",
+    "Its iron ore trains are among the longest in the world, stretching up to about 2.5 km.",
+    "Banc d'Arguin National Park is a key wintering ground for millions of migratory birds."
+  ],
   "MT": [
     "Malta is one of the smallest and most densely populated countries in the world.",
     "It has some of the oldest free-standing structures on Earth.",
     "Both Maltese and English are official languages."
+  ],
+  "MU": [
+    "The dodo, a flightless bird, lived only on Mauritius before dying out in the 17th century.",
+    "Chamarel's Seven Coloured Earth is a patch of sand dunes in distinct shades.",
+    "The island is almost entirely encircled by a coral reef."
+  ],
+  "MV": [
+    "The Maldives is the lowest-lying country in the world, averaging about 1.5 metres above sea level.",
+    "It is made up of around 1,200 coral islands grouped into 26 natural atolls.",
+    "The word 'atoll' comes from Dhivehi, the language of the Maldives."
+  ],
+  "MW": [
+    "Malawi is nicknamed 'the Warm Heart of Africa'.",
+    "Lake Malawi is home to more fish species than any other lake in the world.",
+    "Mount Mulanje rises steeply from the surrounding plains to about 3,000 metres."
+  ],
+  "MX": [
+    "Mexico introduced chocolate, chilies, and corn to the world.",
+    "Mexico City is built on the site of the Aztec capital Tenochtitlan.",
+    "It has 35 UNESCO World Heritage Sites, among the most in the Americas."
+  ],
+  "MY": [
+    "Malaysia's Petronas Twin Towers were the tallest buildings in the world from 1998 to 2004.",
+    "Its Borneo rainforests are home to orangutans and the Rafflesia, the world's largest single flower.",
+    "The country is split into two parts, Peninsular Malaysia and Malaysian Borneo, divided by the sea."
+  ],
+  "MZ": [
+    "Mozambique Island, the former colonial capital, is a UNESCO World Heritage Site.",
+    "The Bazaruto Archipelago is one of the last places in the region where dugongs live.",
+    "The country has one of Africa's longest coastlines, about 2,500 km along the Indian Ocean."
+  ],
+  "NA": [
+    "The Namib is often described as the oldest desert in the world.",
+    "The red dunes around Sossusvlei are among the tallest sand dunes on Earth.",
+    "Welwitschia, a desert plant that can live for over 1,000 years, appears on the coat of arms."
+  ],
+  "NE": [
+    "Niger is named after the Niger River, which flows through its southwest.",
+    "The Grand Mosque of Agadez has a mud-brick minaret about 27 metres tall.",
+    "Each year, nomadic herders gather near Ingall for the Cure Salée festival."
+  ],
+  "NG": [
+    "Nigeria is the most populous country in Africa.",
+    "Nollywood, its film industry, is one of the largest in the world by number of films made.",
+    "Zuma Rock, a giant monolith near Abuja, appears on the 100 naira note."
+  ],
+  "NL": [
+    "About a quarter of the Netherlands lies below sea level.",
+    "It has more bicycles than people.",
+    "The country is the world's second-largest agricultural exporter by value."
+  ],
+  "NO": [
+    "Norway's coastline, including fjords, stretches over 100,000 km.",
+    "It introduced salmon sushi to Japan in the 1980s.",
+    "The sun doesn't fully set for weeks in summer above the Arctic Circle."
+  ],
+  "NP": [
+    "Nepal is home to eight of the world's ten highest mountains, including Mount Everest.",
+    "Its flag is the only non-rectangular national flag in the world.",
+    "Lumbini, the birthplace of the Buddha, is a UNESCO World Heritage Site."
+  ],
+  "NR": [
+    "Nauru is the third-smallest country in the world, after Vatican City and Monaco.",
+    "It has no official capital; government offices are in the Yaren district.",
+    "A single ring road loops around the whole island in under 20 km."
+  ],
+  "NZ": [
+    "New Zealand was the first country to give women the right to vote, in 1893.",
+    "There are roughly five sheep for every person.",
+    "No part of the country is more than about 120 km from the sea."
+  ],
+  "OM": [
+    "Oman's Dhofar region has supplied precious frankincense resin for thousands of years.",
+    "Its ancient aflaj irrigation channels, still in use today, are a UNESCO World Heritage Site.",
+    "The country is dotted with hundreds of forts and castles, including the UNESCO-listed Bahla Fort."
+  ],
+  "PE": [
+    "Peru is home to Machu Picchu, the iconic Inca citadel.",
+    "There are over 3,000 varieties of potato native to the country.",
+    "The Amazon River is generally considered to begin in the Peruvian Andes."
+  ],
+  "PG": [
+    "Papua New Guinea has more than 800 languages, more than any other country.",
+    "It shares New Guinea, the world's second-largest island, with Indonesia.",
+    "Birds of paradise live in its rainforests, and one appears on the national flag."
+  ],
+  "PH": [
+    "The Philippines is made up of more than 7,000 islands.",
+    "The Rice Terraces of the Philippine Cordilleras, carved by hand by the Ifugao people, are a UNESCO site.",
+    "Bohol's Chocolate Hills are more than 1,200 grassy mounds that turn brown in the dry season."
+  ],
+  "PK": [
+    "Mohenjo-daro, built around 2500 BC, was one of the largest cities of the Indus Valley Civilisation.",
+    "The Khewra Salt Mine, one of the oldest and largest in the world, is a source of pink Himalayan salt.",
+    "Lahore's Shalimar Gardens were laid out by the Mughal emperor Shah Jahan in the 1640s."
+  ],
+  "PL": [
+    "Poland is home to Europe's largest surviving primeval forest, Białowieża.",
+    "It has one of the oldest salt mines in the world, at Wieliczka.",
+    "The country moved its entire borders westward after World War II."
+  ],
+  "PS": [
+    "Jericho is one of the oldest continuously inhabited cities in the world, settled over 10,000 years ago.",
+    "Nablus is famous for knafeh, a warm, syrup-soaked pastry filled with soft white cheese.",
+    "Palestinian embroidery, known as tatreez, is recognised by UNESCO as intangible cultural heritage."
+  ],
+  "PT": [
+    "Portugal is one of the oldest nation-states in Europe, with borders largely unchanged since 1139.",
+    "It's the world's largest producer of cork.",
+    "The Vasco da Gama Bridge in Lisbon is one of the longest in Europe."
+  ],
+  "PW": [
+    "Palau's Rock Islands Southern Lagoon is a UNESCO World Heritage Site.",
+    "In 2009 Palau created the world's first shark sanctuary.",
+    "Visitors sign the Palau Pledge, a promise to protect the islands, stamped in their passport."
+  ],
+  "QA": [
+    "Khor Al Adaid, the 'Inland Sea', is one of the few places on Earth where sand dunes meet the sea.",
+    "Al Zubarah, a former pearling and trading town, is Qatar's first UNESCO World Heritage Site.",
+    "The Museum of Islamic Art in the capital, Doha, was designed by architect I. M. Pei."
+  ],
+  "RO": [
+    "Bran Castle in Transylvania is popularly linked to the legend of Dracula.",
+    "The Danube Delta is one of Europe's largest wetlands and a UNESCO World Heritage Site.",
+    "The painted monasteries of Bucovina are covered in vivid frescoes inside and out."
+  ],
+  "RS": [
+    "The capital, Belgrade, sits where the Sava River flows into the Danube.",
+    "Belgrade's Nikola Tesla Museum keeps the inventor's ashes in a gilded sphere.",
+    "Studenica Monastery, founded in the 12th century, is a UNESCO World Heritage Site."
+  ],
+  "RU": [
+    "Russia is the largest country on Earth, spanning 11 time zones.",
+    "Lake Baikal holds around 20% of the world's unfrozen fresh water.",
+    "It borders 14 countries by land."
+  ],
+  "RW": [
+    "Rwanda is known as the 'Land of a Thousand Hills'.",
+    "Volcanoes National Park is home to mountain gorillas.",
+    "On the last Saturday of each month, communities take part in Umuganda, a day of community work."
+  ],
+  "SA": [
+    "Saudi Arabia is one of the largest countries in the world without a permanent river.",
+    "The Rub' al Khali, or Empty Quarter, is the largest continuous sand desert in the world.",
+    "Hegra, with its Nabataean tombs carved into sandstone, was the country's first UNESCO site."
+  ],
+  "SB": [
+    "The islands were named by the Spanish explorer Álvaro de Mendaña in 1568.",
+    "East Rennell, one of the largest raised coral atolls in the world, is a UNESCO site.",
+    "Strings of polished shell beads, known as shell money, are still used in ceremonies."
+  ],
+  "SC": [
+    "Seychelles is the smallest country in Africa.",
+    "The coco de mer palm, native to Praslin and Curieuse, produces the largest seed of any plant.",
+    "Aldabra Atoll is home to one of the largest populations of giant tortoises in the world."
+  ],
+  "SD": [
+    "Sudan has more ancient pyramids than Egypt, including those at Meroë.",
+    "The Blue Nile and White Nile meet at the capital, Khartoum.",
+    "Sanganeb Marine National Park in the Red Sea is a UNESCO World Heritage Site."
+  ],
+  "SE": [
+    "Sweden has among the most islands of any country — over 260,000.",
+    "It gave the world the zipper, the pacemaker, and Spotify.",
+    "Recycling is so efficient the country imports waste to fuel power plants."
+  ],
+  "SG": [
+    "Singapore is one of only three surviving city-states in the world.",
+    "It has four official languages: English, Malay, Mandarin, and Tamil.",
+    "The country is famed for its lush 'garden city' urban planning."
+  ],
+  "SI": [
+    "Lake Bled has a tiny island with a church, reached by traditional wooden pletna boats.",
+    "The Lipizzaner horse is named after Lipica, where its stud farm was founded in 1580.",
+    "The olm, a blind cave salamander, lives in Slovenia's caves and is nicknamed the 'baby dragon'."
+  ],
+  "SK": [
+    "Spiš Castle is one of the largest castle complexes in Central Europe.",
+    "The High Tatras are the highest range of the Carpathian Mountains.",
+    "The capital, Bratislava, is the only capital that borders two countries, Austria and Hungary."
+  ],
+  "SL": [
+    "The name comes from the Portuguese 'Serra Leoa', meaning 'lion mountains'.",
+    "The capital, Freetown, sits on one of the largest natural harbours in the world.",
+    "Tiwai Island is a wildlife sanctuary known for its many primate species."
+  ],
+  "SM": [
+    "San Marino traces its founding to 301 AD and is considered the oldest surviving republic.",
+    "It is completely surrounded by Italy.",
+    "Its Three Towers stand on the peaks of Mount Titano, overlooking the Adriatic coast."
+  ],
+  "SN": [
+    "The Pointe des Almadies near Dakar is the westernmost point of mainland Africa.",
+    "Lake Retba, or Lac Rose, is famous for its pink-tinted water.",
+    "Thieboudienne, the national dish of fish and rice, is on UNESCO's intangible heritage list."
+  ],
+  "SO": [
+    "Somalia has the longest coastline of any country on mainland Africa.",
+    "It is home to one of the largest camel populations in the world.",
+    "Frankincense and myrrh have been harvested in the region for thousands of years."
+  ],
+  "SS": [
+    "It became independent in 2011, making it the youngest country in the world.",
+    "The Sudd, formed by the White Nile, is one of the largest wetlands in the world.",
+    "Huge herds of white-eared kob and other antelope migrate across its plains each year."
+  ],
+  "ST": [
+    "Pico Cão Grande is a dramatic needle-shaped volcanic peak rising out of the rainforest.",
+    "In the early 1900s, the islands were the world's largest producer of cocoa.",
+    "The equator passes through Ilhéu das Rolas, a small islet off São Tomé."
+  ],
+  "SY": [
+    "The capital, Damascus, is one of the oldest continuously inhabited cities in the world.",
+    "The ancient port of Ugarit produced one of the earliest known alphabets, written in cuneiform.",
+    "Aleppo soap, made with olive and laurel oil, has been produced for centuries."
+  ],
+  "SZ": [
+    "Eswatini was known as Swaziland until 2018.",
+    "The Umhlanga Reed Dance is one of the country's best-known cultural festivals.",
+    "Sibebe Rock, near Mbabane, is one of the largest exposed granite domes in the world."
+  ],
+  "TD": [
+    "Chad is named after Lake Chad, which lies on its western border.",
+    "Emi Koussi in the Tibesti Mountains is the highest peak in the Sahara.",
+    "The Ennedi Plateau is famous for its sandstone arches and ancient rock art."
+  ],
+  "TG": [
+    "Togo is a long, narrow country stretching inland from a short Atlantic coastline.",
+    "Koutammakou is famous for the tower-like mud houses of the Batammariba people.",
+    "The country takes its name from Togoville, a town on the shore of Lake Togo."
+  ],
+  "TH": [
+    "Thailand is the only Southeast Asian country never colonized by a European power.",
+    "Its capital's full ceremonial name is the longest city name in the world.",
+    "There are more than 40,000 Buddhist temples across the country."
+  ],
+  "TJ": [
+    "More than 90 percent of Tajikistan is mountainous, with the Pamirs rising in the east.",
+    "The Pamir Highway is one of the highest roads in the world, crossing passes above 4,000 metres.",
+    "The Fedchenko Glacier, about 77 km long, is the longest glacier outside the polar regions."
+  ],
+  "TL": [
+    "Timor-Leste lies in the Coral Triangle, the region with the richest coral reef life on Earth.",
+    "Tais, hand-woven textiles, are a treasured craft listed by UNESCO for urgent safeguarding.",
+    "Mount Ramelau, the highest peak at about 2,986 metres, is a popular sunrise hike."
+  ],
+  "TM": [
+    "The Darvaza gas crater, nicknamed the 'Door to Hell', has been burning for decades.",
+    "Merv, once a great oasis city on the Silk Road, is a UNESCO World Heritage Site.",
+    "The Akhal-Teke horse, prized for its shimmering metallic coat, is a national symbol."
+  ],
+  "TN": [
+    "The ruins of ancient Carthage lie on the outskirts of the capital, Tunis.",
+    "The amphitheatre of El Jem is one of the largest Roman amphitheatres in the world.",
+    "Star Wars scenes were filmed here, and the planet Tatooine is named after the town of Tataouine."
+  ],
+  "TO": [
+    "Humpback whales visit Tonga's waters each year, and visitors can swim alongside them.",
+    "Ha'amonga 'a Maui is a stone trilithon built around the 13th century.",
+    "The kingdom is made up of around 170 islands, only about 36 of them inhabited."
+  ],
+  "TR": [
+    "Turkey straddles two continents, Europe and Asia.",
+    "Istanbul is the only major city that sits on two continents.",
+    "It's home to Göbekli Tepe, among the oldest known temple sites on Earth."
+  ],
+  "TV": [
+    "Tuvalu is the fourth-smallest country in the world by area.",
+    "The name Tuvalu means 'eight standing together', after its eight originally inhabited islands.",
+    "Its internet domain, .tv, is popular with television and streaming websites."
+  ],
+  "TW": [
+    "Taroko Gorge is a dramatic marble canyon carved by the Liwu River.",
+    "Bubble tea, with its chewy tapioca pearls, was invented in Taiwan in the 1980s.",
+    "Yushan, at 3,952 metres, is the island's highest peak, taller than Japan's Mount Fuji."
+  ],
+  "TZ": [
+    "Mount Kilimanjaro is the highest mountain in Africa.",
+    "The Serengeti hosts the annual Great Migration of wildebeest and zebra.",
+    "Stone Town, the old heart of Zanzibar City, is a UNESCO World Heritage Site."
+  ],
+  "UA": [
+    "Kyiv's Saint Sophia Cathedral dates from the 11th century and is a UNESCO World Heritage Site.",
+    "Pysanky, eggs decorated with intricate wax-resist patterns, are a cherished folk art.",
+    "Kyiv's Arsenalna station, about 105 metres underground, is one of the deepest metro stations."
+  ],
+  "UG": [
+    "Uganda was called the 'Pearl of Africa' by Winston Churchill.",
+    "Bwindi Impenetrable National Park shelters a large share of the world's mountain gorillas.",
+    "The White Nile begins its journey where it flows out of Lake Victoria at Jinja."
+  ],
+  "US": [
+    "The United States has no official national language at the federal level.",
+    "It spans six time zones across its states.",
+    "Yellowstone, established 1872, was the world's first national park."
+  ],
+  "UZ": [
+    "Uzbekistan is one of only two doubly landlocked countries in the world, along with Liechtenstein.",
+    "Samarkand's Registan square is framed by three grand madrasas covered in blue tilework.",
+    "Plov, rice cooked with meat, carrots and onions, is the national dish."
+  ],
+  "VA": [
+    "Vatican City is the smallest country in the world, at under half a square kilometre.",
+    "Michelangelo painted the Sistine Chapel ceiling between 1508 and 1512.",
+    "The Swiss Guard has protected the Pope since 1506."
+  ],
+  "VN": [
+    "Vietnam is the world's second-largest coffee exporter.",
+    "It has a coastline of over 3,000 km.",
+    "The city of Hội An is a remarkably preserved ancient trading port."
+  ],
+  "VU": [
+    "Land diving on Pentecost Island, where men leap from towers tied with vines, inspired bungee jumping.",
+    "Mount Yasur on Tanna is one of the world's most accessible active volcanoes.",
+    "Vanuatu has an underwater post office at Hideaway Island, where you can mail waterproof postcards."
+  ],
+  "WS": [
+    "In 2011 Samoa skipped 30 December entirely to move to the west of the International Date Line.",
+    "Writer Robert Louis Stevenson spent his last years in Samoa and is buried on Mount Vaea.",
+    "Traditional Samoan houses, called fale, are open-sided with no walls."
+  ],
+  "XK": [
+    "The Rugova Gorge in the west is a favourite spot for hiking, climbing and via ferrata.",
+    "Prizren is known for its Ottoman-era stone bridge and the hilltop fortress above its old town.",
+    "Flija, a layered pancake pie slowly baked under a lid of hot coals, is a traditional dish."
+  ],
+  "YE": [
+    "Socotra Island is home to the dragon's blood tree, which grows nowhere else on Earth.",
+    "The walled city of Shibam, with its mud-brick tower houses, is nicknamed the 'Manhattan of the Desert'.",
+    "Mocha coffee is named after the Yemeni port of Mocha, once a major coffee trading hub."
+  ],
+  "ZA": [
+    "South Africa has three capital cities: Pretoria, Cape Town, and Bloemfontein.",
+    "It has 11 official languages.",
+    "Table Mountain is one of the oldest mountains on Earth."
+  ],
+  "ZM": [
+    "Victoria Falls is known locally as Mosi-oa-Tunya, 'the smoke that thunders'.",
+    "Walking safaris were pioneered in South Luangwa National Park.",
+    "Each year, millions of straw-coloured fruit bats gather in Kasanka National Park."
+  ],
+  "ZW": [
+    "The country is named after Great Zimbabwe, a medieval city built of stone.",
+    "Lake Kariba, shared with Zambia, is the world's largest artificial lake by volume.",
+    "Hwange, the largest national park, is known for its large herds of elephants."
   ]
 }

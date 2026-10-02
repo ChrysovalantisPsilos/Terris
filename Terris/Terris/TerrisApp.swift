@@ -27,6 +27,7 @@ struct TerrisApp: App {
                     .environment(router)
                     // The flight screens still read Core Data directly.
                     .environment(\.managedObjectContext, persistence.container.viewContext)
+                    .environment(\.isLaunching, isLaunching)
 
                 if isLaunching {
                     LaunchScreenView()
