@@ -26,7 +26,10 @@ private struct MapPainter {
         let progress = effects.fillProgress(at: now)
         let order = progress < 1 ? MapPainter.fillOrder(statusByISO) : [:]
         var pulsing: [(Path, TravelStatus, Double)] = []
+        var marked: [(path: Path, iso: String, status: TravelStatus)] = []
+        var highlight: Path?
 
+        // Land and borders for every visible country.
         for shape in shapes {
             var path = Path()
             var anyVisible = false
@@ -43,19 +46,35 @@ private struct MapPainter {
             guard anyVisible else { continue }
             let status = statusByISO[shape.iso] ?? .none
             ctx.fill(path, with: .color(Theme.land))
-            if status != .none {
-                var layer = ctx
-                layer.opacity = MapEffects.fillAlpha(index: order[shape.iso] ?? 0, count: order.count,
-                                                     progress: progress)
-                fill(&layer, path: path, status: status)
+            if status == .none {
+                ctx.stroke(path, with: .color(Theme.border), lineWidth: 0.5)
+            } else {
+                marked.append((path, shape.iso, status))
             }
-            ctx.stroke(path, with: .color(Theme.border), lineWidth: 0.5)
-            if shape.iso == highlightISO {
-                ctx.stroke(path, with: .color(Theme.ink), lineWidth: 2)
-            }
+            if shape.iso == highlightISO { highlight = path }
             if let phase = effects.pulsePhase(shape.iso, at: now) {
                 pulsing.append((path, status, phase))
             }
+        }
+        // Night Atlas: a soft glow under visited and lived countries (dark only).
+        if ctx.environment.colorScheme == .dark {
+            var glow = ctx
+            glow.addFilter(.blur(radius: 7))
+            for item in marked {
+                guard let color = Theme.glow(for: item.status) else { continue }
+                glow.opacity = MapEffects.fillAlpha(index: order[item.iso] ?? 0, count: order.count, progress: progress)
+                glow.fill(item.path, with: .color(color))
+            }
+        }
+        // The status fills on top, fading in during the fill effect.
+        for item in marked {
+            var layer = ctx
+            layer.opacity = MapEffects.fillAlpha(index: order[item.iso] ?? 0, count: order.count, progress: progress)
+            fill(&layer, path: item.path, status: item.status)
+            ctx.stroke(item.path, with: .color(Theme.border), lineWidth: 0.5)
+        }
+        if let highlight {
+            ctx.stroke(highlight, with: .color(Theme.ink), lineWidth: 2)
         }
         // Dots for marked countries the dataset has no outline for.
         for (iso, status) in statusByISO where status != .none && WorldShapes.shared.byISO[iso] == nil {
@@ -138,6 +157,8 @@ struct GlobeMap: View {
     var highlightISO: String? = nil
     var interactive = true
     var effects: MapEffects = .none
+    /// A soft light around the globe (the Map's big globe).
+    var showsHalo = false
     var onSelect: (String) -> Void = { _ in }
     /// Called when a drag ends, with where the fling would carry the globe.
     var onFling: ((GeoPoint) -> Void)? = nil
@@ -154,6 +175,11 @@ struct GlobeMap: View {
                 Canvas { ctx, _ in
                     let disc = Path(ellipseIn: CGRect(x: mid.x - radius, y: mid.y - radius,
                                                       width: radius * 2, height: radius * 2))
+                    if showsHalo {
+                        var halo = ctx
+                        halo.addFilter(.blur(radius: radius * 0.06))
+                        halo.stroke(disc, with: .color(Theme.globeHalo), lineWidth: radius * 0.08)
+                    }
                     ctx.fill(disc, with: .color(Theme.ocean))
                     drawGraticule(&ctx, mid: mid, radius: radius)
                     MapPainter(statusByISO: statusByISO, highlightISO: highlightISO,
@@ -164,7 +190,7 @@ struct GlobeMap: View {
                         }
                     // Soft limb shading so it reads as a sphere.
                     ctx.fill(disc, with: .radialGradient(
-                        Gradient(colors: [.clear, .clear, .black.opacity(0.16)]),
+                        Gradient(colors: [.clear, .clear, Theme.limbShade]),
                         center: CGPoint(x: mid.x - radius * 0.3, y: mid.y - radius * 0.35),
                         startRadius: 0, endRadius: radius * 1.35))
                 }
@@ -320,9 +346,13 @@ struct FlatMap: View {
                 ends.addEllipse(in: CGRect(x: pt.x - 2.5, y: pt.y - 2.5, width: 5, height: 5))
             }
         }
-        ctx.stroke(arcs, with: .color(Theme.visited.opacity(0.85)), lineWidth: 1.4)
-        ctx.fill(ends, with: .color(Theme.card))
-        ctx.stroke(ends, with: .color(Theme.ink), lineWidth: 1)
+        // A soft glow under each route, then the line itself.
+        var glow = ctx
+        glow.addFilter(.blur(radius: 3))
+        glow.stroke(arcs, with: .color(Theme.routeGlow), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+        ctx.stroke(arcs, with: .color(Theme.route), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+        ctx.fill(ends, with: .color(Theme.airportDot))
+        ctx.stroke(ends, with: .color(Theme.airportRing), lineWidth: 1.4)
 
         if let planeRoute, let plane = ctx.resolveSymbol(id: "plane") {
             let t = planeProgress(at: now)

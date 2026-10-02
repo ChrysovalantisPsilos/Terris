@@ -54,6 +54,12 @@ struct FlightFiguresTests {
     @Test func timesAroundTheEarth() {
         let f = FlightFigures.compute([flight("A", "B", year: 2026, km: 128_400)], calendar: utc)
         #expect(f.timesAroundEarth == 3.2)
+        #expect(abs(f.lapFraction - 0.2) < 1e-9)
+        #expect(f.nextLap == 4)
+        // The sample log: 19,200 km is 0.48 of a lap, on the way to 1×.
+        let g = FlightFigures.compute([flight("A", "B", year: 2026, km: 19_200)], calendar: utc)
+        #expect(g.timesAroundEarth == 0.48)
+        #expect(g.nextLap == 1)
     }
 
     @Test func greatCircleStartsAndEndsAtTheAirports() {

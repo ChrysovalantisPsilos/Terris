@@ -79,7 +79,12 @@ struct FlightFigures: Equatable, Sendable {
     static let earthKm = 40_075.0
 
     /// How many times around the Earth, to one decimal.
-    var timesAroundEarth: Double { (km / Self.earthKm * 10).rounded() / 10 }
+    /// How many times around the Earth, to two decimals (19,200 km → 0.48).
+    var timesAroundEarth: Double { (km / Self.earthKm * 100).rounded() / 100 }
+    /// How far into the current lap (0…1), for the progress bar.
+    var lapFraction: Double { timesAroundEarth - timesAroundEarth.rounded(.down) }
+    /// The lap the bar runs towards (1× until the first full lap, then 2×…).
+    var nextLap: Int { Int(timesAroundEarth.rounded(.down)) + 1 }
 
     static func compute(_ flights: [FlightRecord], calendar: Calendar = .current) -> FlightFigures {
         let sorted = flights.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }

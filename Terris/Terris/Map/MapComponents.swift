@@ -73,45 +73,74 @@ struct StatusLegend: View {
     }
 }
 
-/// The headline: count, share of the world and cities.
-struct HeadlineText: View {
+/// The four tiles the Globe layout's sheet peeks with: visited, lived,
+/// want to go, cities.
+struct LegendTiles: View {
     let figures: MapFigures
-    var large = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("^[\(figures.beenTo) country](inflect: true)")
-                .font(large ? .largeTitle.bold() : .title2.bold())
-                .foregroundStyle(Theme.ink)
-                .contentTransition(.numericText(value: Double(figures.beenTo)))
-            Text("of \(figures.total) · ^[\(figures.cityCount) city](inflect: true)")
-                .font(.subheadline)
-                .foregroundStyle(Theme.muted)
+        HStack(spacing: 10) {
+            tile(figures.visited, Text("Visited")) { swatch(Theme.visited) }
+            tile(figures.lived, Text("Lived")) { swatch(Theme.lived) }
+            tile(figures.wantTo, Text("Want to go")) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Theme.wantToFill)
+                    .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Theme.wantTo, lineWidth: 1.5))
+                    .frame(width: 12, height: 12)
+            }
+            tile(figures.cityCount, Text("Cities")) {
+                Image(systemName: "mappin").font(.caption.weight(.semibold)).foregroundStyle(Theme.muted)
+            }
         }
+    }
+
+    private func swatch(_ color: Color) -> some View {
+        RoundedRectangle(cornerRadius: 3).fill(color).frame(width: 12, height: 12)
+    }
+
+    private func tile(_ value: Int, _ label: Text, @ViewBuilder key: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .top) {
+                Text("\(value)")
+                    .font(.title2.bold().monospacedDigit())
+                    .foregroundStyle(Theme.ink)
+                    .contentTransition(.numericText(value: Double(value)))
+                Spacer(minLength: 2)
+                key().padding(.top, 6)
+            }
+            label.font(.subheadline).foregroundStyle(Theme.muted).lineLimit(1).minimumScaleFactor(0.75)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.subtle, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 }
 
-/// Six continent tiles in a 3×2 grid (Globe layout).
-struct ContinentGrid: View {
+/// Continents as slim one-line rows: name, bar, count (Globe layout).
+struct ContinentLines: View {
     let continents: [ContinentFigure]
 
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+        VStack(spacing: 0) {
             ForEach(Array(continents.enumerated()), id: \.element.id) { index, c in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(c.name).font(.caption).foregroundStyle(Theme.muted).lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                    Text("\(Text("\(c.beenTo)").font(.title3.bold()).foregroundStyle(Theme.ink)) / \(c.total)")
-                        .font(.footnote).foregroundStyle(Theme.muted)
+                HStack(spacing: 12) {
+                    Text(c.name).foregroundStyle(Theme.ink)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                        .frame(width: 128, alignment: .leading)
                     ProgressBar(fraction: c.fraction)
+                    Text("\(Text("\(c.beenTo)").bold().foregroundStyle(Theme.ink)) / \(c.total)")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(Theme.muted)
+                        .frame(minWidth: 52, alignment: .trailing)
                 }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.subtle, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .padding(.vertical, 11)
                 .accessibilityElement(children: .combine)
                 .reveal(index)
+                if index < continents.count - 1 { Divider() }
             }
         }
+        .card(padding: 16)
     }
 }
 

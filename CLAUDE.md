@@ -62,7 +62,8 @@ Terris/
     Data/FootprintStore      the only Core Data reads/writes for the footprint
     Theme/                   tokens (Theme), Liquid Glass helpers (Glass), Motion
                              (springs, easing, reveal, GlobeCamera, MapEffects),
-                             BrandMark (the Summit Flag as animatable shapes)
+                             BrandMark (the Summit Flag as animatable shapes), Sky
+                             (day sky / Night Atlas backdrop with stars)
     Geo/                     Projection (orthographic, Equal Earth), WorldShapes
                              (countries.geojson), GlobeMap / FlatMap canvases
                              (fill-in, pulses, drawing routes, the plane),

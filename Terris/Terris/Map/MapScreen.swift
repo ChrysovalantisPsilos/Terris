@@ -32,6 +32,7 @@ struct MapScreen: View {
             }
             .background(Theme.canvas.ignoresSafeArea())
             .toolbar { toolbar }
+            .toolbar(layout == .globe ? .hidden : .automatic, for: .navigationBar)
             .navigationTitle(layout == .journal ? Text("My World") : Text(""))
             .navigationBarTitleDisplayMode(layout == .journal ? .large : .inline)
         }
@@ -62,7 +63,8 @@ struct MapScreen: View {
         Group {
             switch layout {
             case .globe:
-                GlobeLayout(figures: figures, effects: effects, onSelect: { router.open($0) }, onScan: { scan() })
+                GlobeLayout(figures: figures, effects: effects, layout: $layout,
+                            onSelect: { router.open($0) }, onScan: { scan() }, onGuide: { showingGuide = true })
             case .journal:
                 JournalLayout(figures: figures, effects: effects, onSelect: { router.open($0) }, onScan: { scan() })
             case .atlas:
@@ -84,17 +86,7 @@ struct MapScreen: View {
             Button(action: scan) {
                 Label("Find countries in my photos", systemImage: "photo.badge.magnifyingglass")
             }
-            Menu {
-                Picker(selection: $layout.animation(Theme.spring)) {
-                    ForEach(MapLayout.allCases) { option in
-                        Label(option.title, systemImage: option.systemImage).tag(option)
-                    }
-                } label: {
-                    Text("Layout")
-                }
-            } label: {
-                Label("Layout", systemImage: "square.3.layers.3d")
-            }
+            LayoutMenu(layout: $layout)
         }
     }
 
@@ -103,11 +95,37 @@ struct MapScreen: View {
 
 // MARK: - Globe
 
+/// The layout picker (Globe, Journal, Atlas), as a menu.
+struct LayoutMenu: View {
+    @Binding var layout: MapLayout
+
+    var body: some View {
+        Menu {
+            Picker(selection: $layout.animation(Theme.spring)) {
+                ForEach(MapLayout.allCases) { option in
+                    Label(option.title, systemImage: option.systemImage).tag(option)
+                }
+            } label: {
+                Text("Layout")
+            }
+        } label: {
+            Label("Layout", systemImage: "square.3.layers.3d")
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+    }
+}
+
+/// Immersive Glass: the headline number over the sky, a large globe that
+/// bleeds off both edges, floating glass controls, and the details in a sheet
+/// that peeks with the four legend tiles.
 private struct GlobeLayout: View {
     let figures: MapFigures
     let effects: MapEffects
+    @Binding var layout: MapLayout
     let onSelect: (String) -> Void
     let onScan: () -> Void
+    let onGuide: () -> Void
 
     @Environment(\.motionEnabled) private var motionEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -119,58 +137,59 @@ private struct GlobeLayout: View {
 
     private var animate: Bool { motionEnabled && !reduceMotion }
 
-    private let collapsedHeight: CGFloat = 300
+    private var isEmpty: Bool { figures.beenTo + figures.wantTo == 0 }
+    /// The sheet at rest: the grabber and the legend tiles, or the empty
+    /// map's hint with its button, above the tab bar.
+    private var collapsedHeight: CGFloat { isEmpty ? 236 : 124 }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                Color.clear.frame(height: 96)
+        GeometryReader { geo in
+            let diameter = geo.size.width * 1.25
+            ZStack(alignment: .top) {
+                SkyBackdrop(fadeAt: 0.9)
+
                 GlobeMap(statusByISO: figures.statusByISO,
                          center: Binding(get: { camera.center }, set: { camera.set($0) }),
                          effects: effects,
+                         showsHalo: true,
                          onSelect: { select($0) },
                          onFling: { target in
                              camera.turn(to: target, duration: 0.9, animated: animate, curve: Motion.easeOutCubic)
                          })
-                    .padding(.horizontal, 12)
-                    .frame(maxHeight: .infinity)
-                Color.clear.frame(height: collapsedHeight - 24)
-            }
+                    .frame(width: diameter, height: diameter)
+                    .position(x: geo.size.width / 2, y: 150 + diameter / 2)
 
-            HStack(spacing: 14) {
-                WorldRing(fraction: figures.fraction, percent: figures.percent, size: 52)
-                VStack(alignment: .leading, spacing: 6) {
-                    HeadlineText(figures: figures)
-                    StatusLegend(figures: figures)
+                HStack(alignment: .top) {
+                    Headline(figures: figures)
+                    Spacer(minLength: 12)
+                    MapControls(layout: $layout, onScan: onScan, onGuide: onGuide)
                 }
-                Spacer(minLength: 0)
-            }
-            .padding(14)
-            .floatingGlass()
-            .padding(.horizontal, 16)
-            .padding(.top, 4)
+                .padding(.horizontal, Theme.margin)
+                .padding(.top, 6)
 
-            PullUpPanel(expanded: $expanded, collapsedHeight: collapsedHeight) {
-                VStack(alignment: .leading, spacing: 16) {
-                    // An empty map leads with the hint, so its button sits above the tab bar.
-                    if figures.beenTo + figures.wantTo == 0 {
-                        MapEmptyHint(onScan: onScan)
-                    }
-                    SectionTitle("Continents")
-                    ContinentGrid(continents: figures.continents)
-                    if figures.beenTo + figures.wantTo > 0 {
-                        if !figures.recent.isEmpty {
-                            SectionTitle("Recently added")
-                            CountryListCard(rows: figures.recent, onSelect: onSelect)
+                PullUpPanel(expanded: $expanded, collapsedHeight: collapsedHeight) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        // An empty map leads with the hint.
+                        if isEmpty {
+                            MapEmptyHint(onScan: onScan)
                         }
-                        if !figures.wishlist.isEmpty {
-                            SectionTitle("Want to go") { Text("\(figures.wantTo)") }
-                            CountryListCard(rows: figures.wishlist, onSelect: onSelect)
+                        LegendTiles(figures: figures)
+                        SectionTitle("Continents")
+                        ContinentLines(continents: figures.continents)
+                        if !isEmpty {
+                            if !figures.recent.isEmpty {
+                                SectionTitle("Recently added")
+                                CountryListCard(rows: figures.recent, onSelect: onSelect)
+                            }
+                            if !figures.wishlist.isEmpty {
+                                SectionTitle("Want to go") { Text("\(figures.wantTo)") }
+                                CountryListCard(rows: figures.wishlist, onSelect: onSelect)
+                            }
                         }
                     }
+                    .padding(.horizontal, Theme.margin)
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
             }
         }
         .onAppear {
@@ -195,6 +214,60 @@ private struct GlobeLayout: View {
             await turn.value
             onSelect(iso)
         }
+    }
+}
+
+/// "36" set large, then "of 197 countries · 18%".
+private struct Headline: View {
+    let figures: MapFigures
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("\(figures.beenTo)")
+                .font(.system(size: 76, weight: .heavy).monospacedDigit())
+                .tracking(-2)
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText(value: Double(figures.beenTo)))
+            Text("of \(figures.total) countries · \(Text("\(figures.percent)%").foregroundStyle(Theme.skyAccent))")
+                .font(.title3.weight(.medium))
+                .foregroundStyle(Theme.skyInk)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The floating glass capsule: photo scan, layout and how it works.
+private struct MapControls: View {
+    @Binding var layout: MapLayout
+    let onScan: () -> Void
+    let onGuide: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button(action: onScan) {
+                Label("Find countries in my photos", systemImage: "photo.badge.magnifyingglass")
+                    .frame(width: 50, height: 48)
+                    .contentShape(Rectangle())
+            }
+            divider
+            LayoutMenu(layout: $layout)
+            divider
+            Button(action: onGuide) {
+                Label("How Terris works", systemImage: "questionmark.circle")
+                    .frame(width: 50, height: 48)
+                    .contentShape(Rectangle())
+            }
+        }
+        .labelStyle(.iconOnly)
+        .font(.system(size: 19, weight: .semibold))
+        .foregroundStyle(Theme.ink)
+        .buttonStyle(.plain)
+        .frame(width: 50)
+        .glassEffect(.regular.interactive(), in: Capsule())
+    }
+
+    private var divider: some View {
+        Rectangle().fill(Theme.muted.opacity(0.25)).frame(width: 26, height: 0.5)
     }
 }
 

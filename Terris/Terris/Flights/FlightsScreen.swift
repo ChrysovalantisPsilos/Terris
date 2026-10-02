@@ -2,7 +2,8 @@
 //  FlightsScreen.swift
 //  Terris
 //
-//  The Flights tab: totals, a route map, and the log grouped by year.
+//  The Flights tab: the route map edge to edge, the distance flown set
+//  large, how far around the Earth that is, and the log grouped by year.
 //  Logging opens FlightFormScreen; a row opens FlightScreen.
 //
 
@@ -12,15 +13,12 @@ import SwiftUI
 @Observable
 final class FlightsModel {
     private(set) var figures = FlightFigures.compute([])
-    private(set) var statusByISO: [String: TravelStatus] = [:]
     private let store: FootprintStore
 
     init(store: FootprintStore) { self.store = store }
 
     func load() {
         figures = FlightFigures.compute(store.flightRecords())
-        statusByISO = Dictionary(store.countryRecords().filter { $0.status != .none }.map { ($0.iso, $0.status) },
-                                 uniquingKeysWith: { a, _ in a })
     }
 
     func delete(_ id: UUID) { store.deleteFlight(id: id); load() }
@@ -42,19 +40,17 @@ struct FlightsScreen: View {
     @State private var drewRoutes = false
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                if let model {
-                    content(model)
-                }
+        ScrollView {
+            if let model {
+                content(model)
             }
-            .background(Theme.canvas.ignoresSafeArea())
-            .navigationTitle("Flights")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { adding = true } label: { Label("Add flight", systemImage: "plus") }
-                }
-            }
+        }
+        .scrollIndicators(.hidden)
+        .background(Theme.canvas.ignoresSafeArea())
+        .overlay(alignment: .topTrailing) {
+            GlassIconButton(systemImage: "plus", label: "Add flight") { adding = true }
+                .padding(.trailing, Theme.margin)
+                .padding(.top, 6)
         }
         .task(id: store.version) {
             if model == nil { model = FlightsModel(store: store) }
@@ -71,85 +67,115 @@ struct FlightsScreen: View {
     @ViewBuilder
     private func content(_ model: FlightsModel) -> some View {
         let f = model.figures
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top) {
-                    total(Text("\(f.count)"), f.count == 1 ? Text("flight") : Text("flights"))
-                    Spacer()
-                    total(Text(f.km, format: .number.precision(.fractionLength(0))), Text("km flown"))
-                    Spacer()
-                    total(Text("\(f.airports)"), f.airports == 1 ? Text("airport") : Text("airports"))
-                }
-                FlatMap(statusByISO: model.statusByISO, routes: f.routes, effects: effects)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .onAppear {
-                        guard !drewRoutes, !f.routes.isEmpty else { return }
-                        drewRoutes = true
-                        if motionEnabled && !reduceMotion { effects.routeStart = .now }
-                    }
-                if f.km > 0 {
-                    Text("That's \(f.timesAroundEarth, format: .number.precision(.fractionLength(1)))× around the Earth.")
-                        .font(.footnote).foregroundStyle(Theme.muted)
-                }
-            }
-            .card()
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Flights")
+                .font(.system(size: 40, weight: .heavy))
+                .tracking(-0.6)
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, Theme.margin)
+                .padding(.top, 52)
+                .accessibilityAddTraits(.isHeader)
 
-            if f.sections.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("No flights yet").font(.headline).foregroundStyle(Theme.ink)
-                    Text("Log a flight to see your routes, distance and airports.")
-                        .font(.subheadline).foregroundStyle(Theme.muted)
-                    Button { adding = true } label: {
-                        Label("Log your first flight", systemImage: "plus").font(.subheadline.weight(.semibold))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.accent)
+            // The routes, edge to edge, fading into the page above and below.
+            // Land stays neutral: the routes are the only colour here.
+            FlatMap(statusByISO: [:], routes: f.routes, effects: effects)
+                .overlay {
+                    LinearGradient(stops: [
+                        .init(color: Theme.canvas, location: 0),
+                        .init(color: Theme.canvas.opacity(0), location: 0.14),
+                        .init(color: Theme.canvas.opacity(0), location: 0.82),
+                        .init(color: Theme.canvas, location: 1),
+                    ], startPoint: .top, endPoint: .bottom)
+                    .allowsHitTesting(false)
                 }
-                .card()
-            }
+                .onAppear {
+                    guard !drewRoutes, !f.routes.isEmpty else { return }
+                    drewRoutes = true
+                    if motionEnabled && !reduceMotion { effects.routeStart = .now }
+                }
 
-            ForEach(f.sections) { section in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        if let year = section.year {
-                            Text(String(year))
-                        } else {
-                            Text("No date")
+            VStack(alignment: .leading, spacing: 22) {
+                if f.count > 0 {
+                    totals(f)
+                } else {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("No flights yet").font(.headline).foregroundStyle(Theme.ink)
+                        Text("Log a flight to see your routes, distance and airports.")
+                            .font(.subheadline).foregroundStyle(Theme.muted)
+                        Button { adding = true } label: {
+                            Label("Log your first flight", systemImage: "plus").font(.subheadline.weight(.semibold))
                         }
-                        Spacer()
-                        Text("^[\(section.rows.count) flight](inflect: true)")
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.accent)
                     }
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Theme.muted)
-                    .padding(.horizontal, 4)
+                    .card()
+                }
 
-                    VStack(spacing: 0) {
-                        ForEach(Array(section.rows.enumerated()), id: \.element.id) { index, row in
-                            FlightRow(row: row)
-                                .contentShape(Rectangle())
-                                .onTapGesture { open = OpenFlight(id: row.id) }
-                                .contextMenu {
-                                    Button(role: .destructive) { model.delete(row.id) } label: {
-                                        Label("Delete flight", systemImage: "trash")
-                                    }
+                ForEach(f.sections) { section in
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Group {
+                                if let year = section.year {
+                                    Text(String(year))
+                                } else {
+                                    Text("No date")
                                 }
-                            if index < section.rows.count - 1 { Divider().padding(.leading, 56) }
+                            }
+                            .font(.title2.bold())
+                            .foregroundStyle(Theme.ink)
+                            Spacer()
+                            Text("^[\(section.rows.count) flight](inflect: true)")
+                                .font(.subheadline).foregroundStyle(Theme.muted)
                         }
+                        .padding(.horizontal, 4)
+
+                        VStack(spacing: 0) {
+                            ForEach(Array(section.rows.enumerated()), id: \.element.id) { index, row in
+                                FlightRow(row: row)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { open = OpenFlight(id: row.id) }
+                                    .contextMenu {
+                                        Button(role: .destructive) { model.delete(row.id) } label: {
+                                            Label("Delete flight", systemImage: "trash")
+                                        }
+                                    }
+                                if index < section.rows.count - 1 { Divider().padding(.leading, 56) }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .background(Theme.card, in: Theme.cardShape)
                     }
-                    .padding(.horizontal, 16)
-                    .background(Theme.card, in: Theme.cardShape)
                 }
             }
+            .padding(.horizontal, Theme.margin)
+            .padding(.bottom, 24)
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 24)
     }
 
-    private func total(_ value: Text, _ label: Text) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            value.font(.title2.bold().monospacedDigit()).foregroundStyle(Theme.ink)
-            label.font(.caption).foregroundStyle(Theme.muted)
+    /// "19,200 km", then the share of a lap around the Earth, then counts.
+    private func totals(_ f: FlightFigures) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(f.km, format: .number.precision(.fractionLength(0)))
+                    .font(.system(size: 64, weight: .heavy).monospacedDigit())
+                    .tracking(-1.5)
+                    .foregroundStyle(Theme.ink)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                Text("km").font(.title.weight(.semibold)).foregroundStyle(Theme.muted)
+            }
+            HStack(alignment: .firstTextBaseline) {
+                Text("\(f.timesAroundEarth, format: .number.precision(.fractionLength(2)))× around the Earth")
+                    .font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+                Spacer()
+                Text("\(f.nextLap)×")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.muted)
+            }
+            ProgressBar(fraction: f.lapFraction)
+            Text("^[\(f.count) flight](inflect: true) · ^[\(f.airports) airport](inflect: true)")
+                .font(.headline.weight(.regular)).foregroundStyle(Theme.muted)
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

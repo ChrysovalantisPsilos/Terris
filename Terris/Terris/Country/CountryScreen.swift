@@ -26,12 +26,17 @@ struct CountryScreen: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                if let f = model.figures {
-                    VStack(alignment: .leading, spacing: 20) {
-                        header(f)
-                        StatusPicker(status: f.status) { model.tap($0) }
+        ScrollView {
+            if let f = model.figures {
+                VStack(alignment: .leading, spacing: 22) {
+                    ZStack(alignment: .bottom) {
+                        CountryHero(iso: f.iso, name: f.name, subtitle: subtitle(f), status: f.status,
+                                    photoID: model.photoIDs.first, effects: effects)
+                        StatusPicker(status: f.status, floating: true) { model.tap($0) }
+                            .padding(.horizontal, Theme.margin)
+                            .padding(.bottom, 14)
+                    }
+                    VStack(alignment: .leading, spacing: 22) {
                         if let error = model.error {
                             Label(error, systemImage: "exclamationmark.triangle")
                                 .font(.footnote).foregroundStyle(Theme.visited)
@@ -39,21 +44,23 @@ struct CountryScreen: View {
                         if f.showsDates { dates(f) }
                         cities(f)
                         if f.photoCount > 0 { photos(f) }
-                        if !f.facts.isEmpty { facts(f) }
                         notesCard
+                        if !f.facts.isEmpty { facts(f) }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 32)
-                } else {
-                    ContentUnavailableView("Country not found", systemImage: "globe")
+                    .padding(.horizontal, Theme.margin)
                 }
+                .padding(.bottom, 32)
+            } else {
+                ContentUnavailableView("Country not found", systemImage: "globe")
             }
-            .background(Theme.canvas.ignoresSafeArea())
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { dismiss() } label: { Label("Close", systemImage: "xmark") }
-                }
-            }
+        }
+        .scrollIndicators(.hidden)
+        .ignoresSafeArea(edges: .top)
+        .background(Theme.canvas.ignoresSafeArea())
+        .overlay(alignment: .topLeading) {
+            GlassIconButton(systemImage: "xmark", label: "Close") { dismiss() }
+                .padding(.leading, Theme.margin)
+                .padding(.top, 18)
         }
         .task(id: store.version) {
             model.load()
@@ -68,17 +75,13 @@ struct CountryScreen: View {
 
     // MARK: Sections
 
-    private func header(_ f: CountryFigures) -> some View {
-        CountryHero(iso: f.iso, name: f.name, subtitle: subtitle(f), status: f.status,
-                    photoID: model.photoIDs.first, effects: effects)
-            .padding(.top, 4)
-    }
-
-    private func subtitle(_ f: CountryFigures) -> String {
-        var parts = [f.continent]
-        if !f.cities.isEmpty { parts.append(f.cities.count == 1 ? "1 city" : "\(f.cities.count) cities") }
-        if f.photoCount > 0 { parts.append(f.photoCount == 1 ? "1 photo" : "\(f.photoCount) photos") }
-        return parts.joined(separator: " · ")
+    private func subtitle(_ f: CountryFigures) -> Text {
+        switch (f.cities.count, f.photoCount) {
+        case (0, 0): Text(f.continent)
+        case (let c, 0): Text("\(f.continent) · ^[\(c) city](inflect: true)")
+        case (0, let p): Text("\(f.continent) · ^[\(p) photo](inflect: true)")
+        case (let c, let p): Text("\(f.continent) · ^[\(c) city](inflect: true) · ^[\(p) photo](inflect: true)")
+        }
     }
 
     private func dates(_ f: CountryFigures) -> some View {
@@ -98,10 +101,11 @@ struct CountryScreen: View {
             SectionTitle("Cities")
             FlowLayout(spacing: 8) {
                 ForEach(f.cities, id: \.self) { city in
-                    Label(city, systemImage: "mappin")
-                        .font(.subheadline)
+                    Text(city)
+                        .font(.body)
                         .foregroundStyle(Theme.ink)
-                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: 44)
                         .background(Theme.card, in: Capsule())
                         .contextMenu {
                             Button(role: .destructive) { model.removeCity(city) } label: {
@@ -130,14 +134,19 @@ struct CountryScreen: View {
 
     private func photos(_ f: CountryFigures) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionTitle("Photos") { Text("\(f.photoCount)") }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 4), spacing: 4) {
-                ForEach(model.photoIDs, id: \.self) { id in
-                    AssetImage(assetIdentifier: id)
-                        .aspectRatio(1, contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            SectionTitle("Photos") { Text("\(f.photoCount)").foregroundStyle(Theme.muted) }
+            ScrollView(.horizontal) {
+                HStack(spacing: 10) {
+                    ForEach(model.photoIDs, id: \.self) { id in
+                        AssetImage(assetIdentifier: id)
+                            .frame(width: 104, height: 104)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    }
                 }
+                .padding(.horizontal, Theme.margin)
             }
+            .scrollIndicators(.hidden)
+            .padding(.horizontal, -Theme.margin)
         }
     }
 
@@ -178,7 +187,12 @@ struct CountryScreen: View {
 /// Visited / Lived / Want to go. Tapping the selected one clears it.
 struct StatusPicker: View {
     let status: TravelStatus
+    /// On the country hero: Liquid Glass (a floating control), the selected
+    /// option a solid pill.
+    var floating = false
     let onTap: (TravelStatus) -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
 
     /// The selection pill slides from option to option.
     @Namespace private var pill
@@ -190,11 +204,11 @@ struct StatusPicker: View {
                 Button { onTap(option) } label: {
                     Text(option.label)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(selected ? Theme.color(for: option) : Theme.ink)
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .foregroundStyle(textColor(option, selected: selected))
+                        .frame(maxWidth: .infinity, minHeight: floating ? 50 : 44)
                         .background {
                             if selected {
-                                Capsule().fill(Theme.card)
+                                Capsule().fill(pillColor(option))
                                     .shadow(color: .black.opacity(0.08), radius: 4, y: 1)
                                     .matchedGeometryEffect(id: "pill", in: pill)
                             }
@@ -207,9 +221,23 @@ struct StatusPicker: View {
             }
         }
         .padding(4)
-        .background(Theme.subtle, in: Capsule())
+        .background { if !floating { Capsule().fill(Theme.subtle) } }
+        .glassEffect(floating ? .regular : .identity, in: Capsule())
         .sensoryFeedback(.selection, trigger: status)
         .animation(Motion.spring, value: status)
+    }
+
+    /// Night Atlas fills the selected pill with the status colour; by day
+    /// it's a light pill with coloured text.
+    private var filledPill: Bool { floating && colorScheme == .dark }
+
+    private func pillColor(_ option: TravelStatus) -> Color {
+        filledPill ? Theme.color(for: option) : Theme.card
+    }
+
+    private func textColor(_ option: TravelStatus, selected: Bool) -> Color {
+        if selected { return filledPill ? Theme.onStatus(option) : Theme.color(for: option) }
+        return Theme.ink
     }
 }
 
