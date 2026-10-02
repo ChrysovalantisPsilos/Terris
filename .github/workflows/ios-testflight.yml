@@ -21,9 +21,9 @@
 # The key goes to a file only this job can read and is removed at the end;
 # nothing here prints a secret.
 #
-# The team's certificate slots are shared with Budgeer: this run revokes the
-# "Created via API" development certificates earlier runs made, so don't run
-# it while a Budgeer TestFlight upload is signing.
+# The team's certificate slots are shared with Budgeer. This pipeline only
+# ever revokes the development certificate its own run created (matched
+# against the runner's keychain at the end of the job), never Budgeer's.
 name: ios-testflight
 on:
   workflow_dispatch:
@@ -99,15 +99,8 @@ jobs:
           </dict>
           </plist>
           EOF
-      # Each run's machine is new, so signing makes a development certificate
-      # every time; the earlier runs' ones go first, or Apple's limit stops
-      # the archive (scripts/asc/certificates.mjs; never a person's own).
-      - name: Free the development certificate slots
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        run: node scripts/asc/certificates.mjs
+      - name: Certificate script tests
+        run: node --test scripts/asc/certificates.test.mjs
       - name: Archive
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -147,6 +140,20 @@ jobs:
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID" \
           | tee export.log | grep -E "error:|Upload|EXPORT|\*\*"
+      # Signing on this fresh machine made a development certificate; revoke
+      # exactly that one (matched against this runner's keychain), so runs
+      # don't fill the team's slots. Never another pipeline's (the team is
+      # shared with Budgeer), never a person's, never a distribution one.
+      - name: Revoke this run's development certificate
+        if: always()
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          security find-certificate -a -c "Apple Development" -p > "$RUNNER_TEMP/runner-certs.pem" 2>/dev/null || true
+          node scripts/asc/certificates.mjs "$RUNNER_TEMP/runner-certs.pem"
+          rm -f "$RUNNER_TEMP/runner-certs.pem"
       - name: Remove the key
         if: always()
         run: rm -f "$RUNNER_TEMP/asc_key.p8" "$RUNNER_TEMP/ExportOptions.plist"
