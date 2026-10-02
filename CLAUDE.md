@@ -34,9 +34,11 @@ as screens are revamped.
 6. **User-facing text is localizable:** `Text("…")` literals and
    `LocalizedStringKey` parameters (extracted to the String Catalog), never
    strings assembled in models or figures. English only for now.
-7. **Photos stay references:** store `PHAsset.localIdentifier`, never image
-   data. Locations resolve offline (`OfflineCountryResolver`); no network
-   geocoding for the footprint.
+7. **Photos stay references, and work on every device:** store the iCloud
+   Photos cloud identifier (`icloud:` + `PHCloudIdentifier.stringValue`, see
+   `PhotoReferences`), falling back to `PHAsset.localIdentifier` only when
+   iCloud Photos doesn't know the photo. Never image data. Locations resolve
+   offline (`OfflineCountryResolver`); no network geocoding for the footprint.
 8. **Privacy:** nothing leaves the device except the user's own iCloud
    (CloudKit private database). No analytics, no third-party SDKs without the
    owner's go.
@@ -86,7 +88,8 @@ Terris/
                              denominator), CountryCentroids, AirportDatabase,
                              TravelStatus, CountryFacts
     Services/                OfflineCountryResolver (nonisolated, used off-main by the
-                             scan), AssetImage (PHAsset thumbnails, with PhotoProblem:
+                             scan), PhotoReferences (cross-device photo references,
+                             upgraded at launch), AssetImage (PHAsset thumbnails, with PhotoProblem:
                              no access, not shared, not on this device, didn't load)
     Resources/Fonts          Outfit-Bold (the wordmark only; OFL in docs/brand)
     Assets.xcassets          AppIcon (light, dark, tinted), AccentColor

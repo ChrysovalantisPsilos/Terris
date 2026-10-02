@@ -2,8 +2,9 @@
 //  AssetImage.swift
 //  Terris
 //
-//  Loads a photo thumbnail on demand from the Photos library by its PHAsset
-//  local identifier, so Terris never has to persist full image blobs in
+//  Loads a photo thumbnail on demand from the Photos library by its stored
+//  reference (an iCloud Photos cloud identifier or a local one, see
+//  PhotoReferences), so Terris never has to persist full image blobs in
 //  Core Data / CloudKit. A quick preview shows first and sharpens when the
 //  full thumbnail arrives (from iCloud if the library keeps originals
 //  there). When it can't be shown, the tile says why with its icon, and the
@@ -75,7 +76,8 @@ struct AssetImage: View {
             status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         }
         guard status == .authorized || status == .limited else { return fail(.noAccess) }
-        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject else {
+        guard let local = PhotoReferences.localIdentifier(for: id),
+              let asset = PHAsset.fetchAssets(withLocalIdentifiers: [local], options: nil).firstObject else {
             return fail(status == .limited ? .notShared : .missing)
         }
 

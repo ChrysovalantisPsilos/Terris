@@ -41,6 +41,11 @@ struct TerrisApp: App {
                 try? await Task.sleep(for: .seconds(wait))
                 withAnimation(.easeInOut(duration: 0.4)) { isLaunching = false }
             }
+            .task {
+                // Photos found on this device become references every
+                // device can open (iCloud Photos), once.
+                await PhotoReferences.upgrade(in: store)
+            }
         }
     }
 }

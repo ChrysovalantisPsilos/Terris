@@ -187,7 +187,7 @@ struct CountryScreen: View {
                 settingsButton
             case .missing:
                 Text("Some photos aren't on this iPhone").font(.headline)
-                Text("They were found on another device or have been deleted. Scan the photos on this iPhone to add the ones here.")
+                Text("They were found on a device that hasn't shared them yet, or have been deleted. Open Terris once on the device that found them, with iCloud Photos on, and they'll appear here.")
                     .font(.subheadline).foregroundStyle(Theme.muted)
             case .couldNotLoad:
                 Text("Some photos couldn't be loaded").font(.headline)

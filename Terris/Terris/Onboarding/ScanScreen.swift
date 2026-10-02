@@ -167,7 +167,9 @@ struct ScanScreen: View {
                     primary("Go to my map") { finish() }
                 } else {
                     primary("Add to my map") {
-                        store.applyScan(model.tally.results)
+                        let results = model.tally.results
+                        // Cross-device references, so the photos open on every device.
+                        store.applyScan(results, references: PhotoReferences.cloudReferences(forLocal: results.flatMap(\.samples)))
                         finish()
                     }
                     secondary("Not now") { finish() }

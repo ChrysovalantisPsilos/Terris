@@ -271,7 +271,8 @@ private struct MapControls: View {
         .foregroundStyle(Theme.ink)
         .buttonStyle(.plain)
         .frame(width: 50)
-        .glassEffect(.regular.interactive(), in: Capsule())
+        // Plain glass: interactive glass would take the buttons' taps.
+        .glassEffect(.regular, in: Capsule())
     }
 
     private var divider: some View {

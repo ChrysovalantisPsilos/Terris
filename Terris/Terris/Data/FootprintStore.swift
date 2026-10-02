@@ -214,7 +214,7 @@ extension FootprintStore {
     /// the user already said Lived; visit dates widen to cover the photos.
     /// Returns how many countries were newly added to the map.
     @discardableResult
-    func applyScan(_ results: [ScannedCountry], now: Date = .now) -> Int {
+    func applyScan(_ results: [ScannedCountry], references: [String: String] = [:], now: Date = .now) -> Int {
         var added = 0
         for result in results where entry(for: result.iso) != nil {
             let row = findOrCreate(result.iso)
@@ -232,7 +232,8 @@ extension FootprintStore {
             }
             row.scannedPhotoCount = Int32(clamping: result.count)
             let existing = Set(((row.photos as? Set<TravelPhoto>) ?? []).compactMap(\.assetIdentifier))
-            for id in result.samples where !existing.contains(id) {
+            // Store the cross-device reference when there is one.
+            for id in result.samples.map({ references[$0] ?? $0 }) where !existing.contains(id) {
                 let photo = TravelPhoto(context: context)
                 photo.id = UUID()
                 photo.assetIdentifier = id
@@ -241,6 +242,37 @@ extension FootprintStore {
         }
         save()
         return added
+    }
+}
+
+// MARK: - Photo references
+
+extension FootprintStore {
+    /// Photo references still in a device's local form (see PhotoReferences).
+    func localPhotoReferences() -> [String] {
+        let req: NSFetchRequest<TravelPhoto> = TravelPhoto.fetchRequest()
+        req.predicate = NSPredicate(format: "assetIdentifier != nil AND NOT (assetIdentifier BEGINSWITH %@)",
+                                    PhotoReferences.cloudPrefix)
+        return ((try? context.fetch(req)) ?? []).compactMap(\.assetIdentifier)
+    }
+
+    /// Swaps references (old → new); a photo whose new reference is already
+    /// stored for the same country is removed instead, so none is doubled.
+    func replacePhotoReferences(_ map: [String: String]) {
+        guard !map.isEmpty else { return }
+        let req: NSFetchRequest<TravelPhoto> = TravelPhoto.fetchRequest()
+        req.predicate = NSPredicate(format: "assetIdentifier IN %@", Array(map.keys))
+        guard let rows = try? context.fetch(req), !rows.isEmpty else { return }
+        for row in rows {
+            guard let old = row.assetIdentifier, let new = map[old] else { continue }
+            let siblings = (row.country?.photos as? Set<TravelPhoto>) ?? []
+            if siblings.contains(where: { $0 !== row && $0.assetIdentifier == new }) {
+                context.delete(row)
+            } else {
+                row.assetIdentifier = new
+            }
+        }
+        save()
     }
 }
 

@@ -15,7 +15,9 @@ extension View {
     }
 }
 
-/// A 48pt round glass button with an SF Symbol.
+/// A 48pt round glass button with an SF Symbol. Uses the system glass
+/// button style: interactive glass applied by hand takes the tap for its own
+/// press effect, so the action never ran (the country page's close button).
 struct GlassIconButton: View {
     let systemImage: String
     let label: LocalizedStringKey
@@ -26,10 +28,11 @@ struct GlassIconButton: View {
             Image(systemName: systemImage)
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Theme.ink)
-                .frame(width: 48, height: 48)
+                .frame(width: 36, height: 36)
+                .contentShape(Circle())
         }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: Circle())
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
         .accessibilityLabel(Text(label))
     }
 }
