@@ -59,6 +59,10 @@ enum Theme {
 
     static let accent = visited
 
+    /// A country you haven't marked, drawn on the hero's sky: visible on the
+    /// night sky as well as the day one.
+    static let outlineUnmarked = dynamic(light: 0xD5CEC0, dark: 0x5A6874)
+
     // Text and the shade under it on a photo (the country page's hero).
     static let onPhoto = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
     static let photoScrim = dynamic(light: 0x0B0F12, dark: 0x0B0F12, lightAlpha: 0.62, darkAlpha: 0.7)

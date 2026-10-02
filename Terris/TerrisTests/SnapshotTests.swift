@@ -53,7 +53,9 @@ final class SnapshotTests: XCTestCase {
             try await shot(fixture.dress(CountryScreen(iso: "JP", store: fixture.store)), name: "country-japan", dark: dark)
         }
         // Never been: no dates, still the facts.
-        try await shot(fixture.dress(CountryScreen(iso: "FI", store: fixture.store)), name: "country-unvisited", dark: false)
+        for dark in [false, true] {
+            try await shot(fixture.dress(CountryScreen(iso: "FI", store: fixture.store)), name: "country-unvisited", dark: dark)
+        }
     }
 
     func testFlightsSnapshots() async throws {

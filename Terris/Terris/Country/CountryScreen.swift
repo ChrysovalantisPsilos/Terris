@@ -55,12 +55,20 @@ struct CountryScreen: View {
             }
         }
         .scrollIndicators(.hidden)
-        .ignoresSafeArea(edges: .top)
-        .background(Theme.canvas.ignoresSafeArea())
+        // The hero starts inside the safe area (a sheet's top edge sits lower
+        // on a real phone than the screen's); the sky colour fills the strip
+        // above it so the hero still reads as edge to edge.
+        .background {
+            VStack(spacing: 0) {
+                Theme.skyTop.frame(height: CountryHero.height)
+                Theme.canvas
+            }
+            .ignoresSafeArea()
+        }
         .overlay(alignment: .topLeading) {
             GlassIconButton(systemImage: "xmark", label: "Close") { dismiss() }
                 .padding(.leading, Theme.margin)
-                .padding(.top, 18)
+                .padding(.top, 14)
         }
         .task(id: store.version) {
             model.load()

@@ -83,7 +83,7 @@ struct CountryHero: View {
                             .stroke(Theme.border, style: StrokeStyle(lineWidth: 1.2, lineJoin: .round)))
                 }
                 .frame(width: 200, height: 200)
-                .padding(.top, 86)
+                .padding(.top, 72)
                 .padding(.trailing, 24)
             }
         }
@@ -91,7 +91,7 @@ struct CountryHero: View {
     }
 
     private var fill: Color {
-        status == .none ? Theme.land : Theme.color(for: status)
+        status == .none ? Theme.outlineUnmarked : Theme.color(for: status)
     }
 
     private var globe: some View {
