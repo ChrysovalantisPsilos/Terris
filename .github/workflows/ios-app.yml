@@ -53,6 +53,20 @@ jobs:
         run: brew install xcodegen
       - name: Project
         run: cd Terris && xcodegen generate
+      # Runner images don't always carry the same simulators: take an iPhone 17
+      # when there is one, otherwise the newest available iPhone.
+      - name: Pick a simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)["devices"]
+          phones = [(rt, d) for rt, ds in data.items() if "iOS" in rt for d in ds if d["name"].startswith("iPhone")]
+          def version(rt): return [int(x) for x in rt.rsplit("iOS-", 1)[-1].split("-") if x.isdigit()]
+          phones.sort(key=lambda p: (p[1]["name"] == "iPhone 17", version(p[0])), reverse=True)
+          print(phones[0][1]["udid"] if phones else "")')
+          if [ -z "$UDID" ]; then echo "::error::No iPhone simulator on this runner"; exit 1; fi
+          echo "Simulator: $UDID"
+          echo "DESTINATION=platform=iOS Simulator,id=$UDID" >> "$GITHUB_ENV"
       - name: Build for the Simulator
         run: >
           set -o pipefail &&
@@ -93,3 +107,33 @@ jobs:
           path: |
             build.log
             test.log
+
+  # On runs by hand with snapshots: the PNGs also go to the `snapshots`
+  # branch (an orphan branch, overwritten every time), so they can be fetched
+  # with git where the artifact store isn't reachable. A Linux job, the only
+  # one with write access.
+  publish-snapshots:
+    needs: app
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.snapshots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: snapshots
+          path: snapshots
+      - name: Push to the snapshots branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! ls snapshots/*.png >/dev/null 2>&1; then echo "No snapshots to publish."; exit 0; fi
+          cd snapshots
+          git init -q -b snapshots
+          git config user.name "Chrysovalantis Psilos"
+          git config user.email "chrysovalantis.psilos@outlook.com"
+          printf 'Snapshots of %s (ios-app run %s). Overwritten on every run.\n' "$GITHUB_SHA" "$GITHUB_RUN_NUMBER" > README.md
+          git add -A
+          git commit -q -m "Snapshots of ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" snapshots
