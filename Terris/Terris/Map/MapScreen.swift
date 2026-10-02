@@ -106,11 +106,13 @@ private struct GlobeLayout: View {
 
             PullUpPanel(expanded: $expanded, collapsedHeight: collapsedHeight) {
                 VStack(alignment: .leading, spacing: 16) {
-                    SectionTitle("Continents")
-                    ContinentGrid(continents: figures.continents)
+                    // An empty map leads with the hint, so its button sits above the tab bar.
                     if figures.beenTo + figures.wantTo == 0 {
                         MapEmptyHint(onScan: onScan)
-                    } else {
+                    }
+                    SectionTitle("Continents")
+                    ContinentGrid(continents: figures.continents)
+                    if figures.beenTo + figures.wantTo > 0 {
                         if !figures.recent.isEmpty {
                             SectionTitle("Recently added")
                             CountryListCard(rows: figures.recent, onSelect: onSelect)

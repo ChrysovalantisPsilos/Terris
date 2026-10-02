@@ -164,19 +164,29 @@ struct ScanScreen: View {
         }
     }
 
+    /// The newest finds as chips: as many as fit whole (3, 2 or 1), never cut off.
     private var foundChips: some View {
-        let recent = model.tally.foundOrder.suffix(3).reversed()
-        return HStack(spacing: 8) {
-            ForEach(Array(recent), id: \.self) { iso in
+        let recent = Array(model.tally.foundOrder.suffix(3).reversed())
+        return ViewThatFits(in: .horizontal) {
+            chipRow(recent)
+            chipRow(Array(recent.prefix(2)))
+            chipRow(Array(recent.prefix(1)))
+        }
+        .frame(minHeight: 36)
+    }
+
+    private func chipRow(_ isos: [String]) -> some View {
+        HStack(spacing: 8) {
+            ForEach(isos, id: \.self) { iso in
                 Text("\(Flag.emoji(for: iso)) \(store.entry(for: iso)?.name ?? iso)")
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
+                    .fixedSize()
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .background(Theme.card, in: Capsule())
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .frame(minHeight: 36)
     }
 
     private var progressCard: some View {
