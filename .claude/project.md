@@ -40,7 +40,9 @@ skill keeps this file current, so add project facts here, not in the skills.
 - **Branches:** `develop` is where work lands; `main` is what's released.
   A release is the owner's go → fast-forward `main` → TestFlight. The
   TestFlight build runs only on pushes to `main` that touch the app (owner's
-  rule, Oct 2026): never from `develop`, never by hand.
+  rule, Oct 2026): never from `develop`, never by hand. The commit at the
+  tip of a release must not say `[skip ci]`: GitHub then skips every
+  workflow for the push, TestFlight included.
 - **Apple:** team `Z9KGWP5G82` (the same paid account as Budgeer), bundle id
   `com.chrysovalantis.Terris`, iCloud container
   `iCloud.com.chrysovalantis.Terris` (register it in the developer portal if
