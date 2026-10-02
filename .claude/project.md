@@ -108,8 +108,10 @@ batches; never push WIP just to see if it compiles.
   (`com.chrysovalantis.Terris`), and the iCloud container
   `iCloud.com.chrysovalantis.Terris` registered in the developer portal and
   assigned to the App ID (cloud signing can't create containers, as with
-  Budgeer's App Groups). Before the first App Store release, deploy the
-  CloudKit schema from Development to Production in the CloudKit console.
+  Budgeer's App Groups). The CloudKit schema (model v2) was deployed to
+  Production by the owner on 2 Oct 2026; every later model change must be
+  run once in a debug build and deployed again (CloudKit Console → Deploy
+  Schema Changes) before the TestFlight build that needs it.
   `ITSAppUsesNonExemptEncryption` is NO.
 - **CI minutes are scarce** (macOS costs 10x). `ios-app.yml` runs on pushes
   to develop that touch the app, on pull requests, and by hand. Snapshots are
