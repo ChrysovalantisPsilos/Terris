@@ -8,6 +8,7 @@
 //  shrunk to fit French Guiana or the US to fit Alaska and Hawaii.
 //
 
+import CoreGraphics
 import Foundation
 
 enum CountrySilhouette {
