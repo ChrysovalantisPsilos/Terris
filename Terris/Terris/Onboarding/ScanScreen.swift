@@ -67,8 +67,10 @@ struct ScanScreen: View {
     /// Called when the flow ends, whether the user added results or skipped.
     private let onFinish: () -> Void
 
-    init(model: ScanModel = ScanModel(), onFinish: @escaping () -> Void = {}) {
-        _model = State(initialValue: model)
+    // A default argument can't build a main-actor model (defaults are
+    // evaluated outside the main actor), so the fresh one is made here.
+    init(model: ScanModel? = nil, onFinish: @escaping () -> Void = {}) {
+        _model = State(initialValue: model ?? ScanModel())
         self.onFinish = onFinish
     }
 

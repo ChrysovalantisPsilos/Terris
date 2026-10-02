@@ -63,6 +63,32 @@ final class SnapshotTests: XCTestCase {
         try await shot(Fixture.empty().dress(FlightsScreen()), name: "flights-empty", dark: false)
     }
 
+    func testFlightFormSnapshots() async throws {
+        let fixture = Fixture.full()
+        try await shot(fixture.dress(FlightFormScreen(draft: .new(now: Fixture.base), store: fixture.store)),
+                       name: "flight-add", dark: false)
+        var draft = FlightDraft.new(now: Fixture.base)
+        draft.from = kAirportDatabase.first { $0.iata == "BRU" }
+        draft.to = kAirportDatabase.first { $0.iata == "ATH" }
+        draft.arrival = Fixture.base.addingTimeInterval(3 * 3600 + 15 * 60)
+        draft.airline = "Aegean"
+        draft.number = "A3 621"
+        draft.seat = "12A"
+        draft.rating = 4
+        for dark in [false, true] {
+            try await shot(fixture.dress(FlightFormScreen(draft: draft, store: fixture.store)),
+                           name: "flight-add-filled", dark: dark)
+        }
+    }
+
+    func testFlightDetailSnapshots() async throws {
+        let fixture = Fixture.full()
+        let id = try XCTUnwrap(fixture.store.flightRecords().first { $0.from == "BRU" && $0.to == "ATH" }?.id)
+        for dark in [false, true] {
+            try await shot(fixture.dress(FlightScreen(id: id, store: fixture.store)), name: "flight-detail", dark: dark)
+        }
+    }
+
     func testSearchSnapshots() async throws {
         let fixture = Fixture.full()
         try await shot(fixture.dress(SearchScreen()), name: "search", dark: false)
@@ -145,6 +171,7 @@ private struct Fixture {
         return Fixture(persistence: persistence, store: FootprintStore(context: persistence.container.viewContext))
     }
 
+    static let base = Date(timeIntervalSince1970: 1_700_000_000)
     static let lived = ["GR", "BE"]
     static let visited = ["FR", "IT", "ES", "PT", "DE", "NL", "AT", "CH", "CZ", "PL", "HR", "HU", "GB", "IE",
                           "IS", "NO", "SE", "DK", "TR", "CY", "EG", "MA", "AE", "JO", "TH", "JP", "SG", "ID",
@@ -154,7 +181,7 @@ private struct Fixture {
     static func full() -> Fixture {
         let f = empty()
         let store = f.store
-        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        let base = Fixture.base
         for (i, iso) in (lived + visited + wantTo).enumerated() {
             let status: TravelStatus = lived.contains(iso) ? .livedIn : wantTo.contains(iso) ? .wantToVisit : .visited
             store.setStatus(status, for: iso, now: base.addingTimeInterval(Double(i) * 86_400 * 9))
@@ -207,6 +234,13 @@ private struct Fixture {
             f.flightNumber = number
             f.distanceKm = km
             f.departureDate = base.addingTimeInterval(offset * day)
+            if from == "BRU", to == "ATH" {
+                f.arrivalDate = f.departureDate!.addingTimeInterval(3 * 3600 + 15 * 60)
+                f.seatClass = "Economy"
+                f.seatNumber = "12A"
+                f.rating = 4
+                f.notes = "Window seat over the Alps; landed early."
+            }
         }
         try? ctx.save()
     }

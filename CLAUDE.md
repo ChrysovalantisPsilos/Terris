@@ -44,6 +44,9 @@ as screens are revamped.
    snapshot test (light, dark) once the revamp lands. Fixtures are fake.
 10. **No dead code:** remove unused views, models and files in the same
     change that orphans them.
+11. **Default arguments run outside the main actor:** never construct a
+    model (or anything `@MainActor`) in a default argument; default to nil
+    and build it in the initializer.
 
 ## Map
 
@@ -64,8 +67,10 @@ Terris/
                              Atlas layouts), MapComponents
     Country/                 CountryFigures + CountryModel, CountryScreen (sheet)
     Search/                  SearchScreen, CountrySearch (pure)
-    Flights/                 FlightFigures (pure, great-circle routes), FlightsScreen;
-                             AddFlightView and FlightDetailView not yet revamped
+    Flights/                 FlightFigures (pure, great-circle routes, distance),
+                             FlightDraft + AirportSearch (pure), FlightsScreen (tab),
+                             FlightFormScreen (log / edit, inline airport pick),
+                             FlightScreen (one flight)
     Onboarding/              PhotoScanner (PHAsset locations, offline), ScanTally
                              (pure), ScanScreen (first launch and the scan button)
     Models/                  static data: CountryData (the country list and the

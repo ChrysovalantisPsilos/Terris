@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct FlightRecord: Equatable, Sendable, Identifiable {
     var id: UUID
@@ -19,6 +20,38 @@ struct FlightRecord: Equatable, Sendable, Identifiable {
     var airline: String?
     var number: String?
     var km: Double
+    var arrival: Date? = nil
+    var fromCity: String? = nil
+    var toCity: String? = nil
+    var seatClass: SeatClass? = nil
+    var seat: String? = nil
+    var rating: Int = 0
+    var notes: String? = nil
+
+    /// Minutes in the air, when both times are known and in order.
+    var minutes: Int? {
+        guard let date, let arrival, arrival > date else { return nil }
+        return Int(arrival.timeIntervalSince(date) / 60)
+    }
+}
+
+/// Stored as its raw value on Flight.seatClass.
+enum SeatClass: String, CaseIterable, Identifiable, Sendable {
+    case economy = "Economy"
+    case premiumEconomy = "Premium Economy"
+    case business = "Business"
+    case first = "First"
+
+    var id: String { rawValue }
+
+    var label: LocalizedStringKey {
+        switch self {
+        case .economy: "Economy"
+        case .premiumEconomy: "Premium economy"
+        case .business: "Business"
+        case .first: "First"
+        }
+    }
 }
 
 struct FlightFigures: Equatable, Sendable {
@@ -86,6 +119,15 @@ struct FlightFigures: Equatable, Sendable {
 }
 
 extension Projection {
+    /// Great-circle distance in km (haversine, mean Earth radius).
+    static func distanceKm(_ a: GeoPoint, _ b: GeoPoint) -> Double {
+        let r = 6371.0
+        let φ1 = a.lat * .pi / 180, φ2 = b.lat * .pi / 180
+        let dφ = φ2 - φ1, dλ = (b.lon - a.lon) * .pi / 180
+        let h = sin(dφ / 2) * sin(dφ / 2) + cos(φ1) * cos(φ2) * sin(dλ / 2) * sin(dλ / 2)
+        return r * 2 * atan2(h.squareRoot(), (1 - h).squareRoot())
+    }
+
     /// Points along the great circle from a to b (inclusive), for drawing routes.
     static func greatCircle(from a: GeoPoint, to b: GeoPoint, steps: Int = 48) -> [GeoPoint] {
         func vec(_ p: GeoPoint) -> (Double, Double, Double) {

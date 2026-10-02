@@ -3,7 +3,7 @@
 //  Terris
 //
 //  The Flights tab: totals, a route map, and the log grouped by year.
-//  Adding and the flight detail still use the existing forms.
+//  Logging opens FlightFormScreen; a row opens FlightScreen.
 //
 
 import SwiftUI
@@ -24,7 +24,6 @@ final class FlightsModel {
     }
 
     func delete(_ id: UUID) { store.deleteFlight(id: id); load() }
-    func flight(_ id: UUID) -> Flight? { store.flight(id: id) }
 }
 
 private struct OpenFlight: Identifiable {
@@ -56,11 +55,11 @@ struct FlightsScreen: View {
             if model == nil { model = FlightsModel(store: store) }
             withAnimation(Theme.spring) { model?.load() }
         }
-        .sheet(isPresented: $adding) { AddFlightView() }
+        .sheet(isPresented: $adding) {
+            FlightFormScreen(draft: .new(now: .now), store: store)
+        }
         .sheet(item: $open) { item in
-            if let flight = model?.flight(item.id) {
-                NavigationStack { FlightDetailView(flight: flight) }
-            }
+            FlightScreen(id: item.id, store: store)
         }
     }
 

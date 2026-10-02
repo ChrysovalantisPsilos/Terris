@@ -1,7 +1,8 @@
 // AirportDatabase.swift — static list of ~300 major airports worldwide
 import Foundation
 
-struct AirportRecord {
+struct AirportRecord: Equatable, Sendable, Identifiable {
+    var id: String { iata }
     let iata: String
     let icao: String
     let name: String
