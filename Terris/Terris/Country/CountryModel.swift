@@ -11,7 +11,6 @@ struct CountryFigures: Equatable, Sendable {
     var iso: String
     var name: String
     var continent: String
-    var flag: String
     var status: TravelStatus
     var firstVisit: Date?
     var lastVisit: Date?
@@ -28,7 +27,6 @@ struct CountryFigures: Equatable, Sendable {
             iso: entry.isoCode,
             name: entry.name,
             continent: entry.continent,
-            flag: Flag.emoji(for: entry.isoCode),
             status: record?.status ?? .none,
             firstVisit: record?.firstVisit,
             lastVisit: record?.lastVisit,

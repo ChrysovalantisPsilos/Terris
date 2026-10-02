@@ -3,7 +3,8 @@
 //  Terris
 //
 //  A country's page, opened as a sheet from anywhere (map, lists, search).
-//  Status, dates, cities, photos, fun facts and notes, all edited inline.
+//  A hero picture (the owner's own photo, or the country's outline), then
+//  status, dates, cities, photos, fun facts and notes, all edited inline.
 //
 
 import SwiftUI
@@ -68,23 +69,9 @@ struct CountryScreen: View {
     // MARK: Sections
 
     private func header(_ f: CountryFigures) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(f.flag).font(.system(size: 44))
-                Text(f.name).font(.largeTitle.bold()).foregroundStyle(Theme.ink)
-                    .lineLimit(2).minimumScaleFactor(0.7)
-                Text(subtitle(f)).font(.subheadline).foregroundStyle(Theme.muted)
-            }
-            Spacer(minLength: 0)
-            if let centroid = WorldShapes.shared.centroid(of: f.iso) {
-                GlobeMap(statusByISO: [f.iso: f.status == .none ? .visited : f.status],
-                         center: .constant(centroid), highlightISO: f.iso, interactive: false,
-                         effects: effects)
-                    .frame(width: 112, height: 112)
-                    .accessibilityHidden(true)
-            }
-        }
-        .padding(.top, 4)
+        CountryHero(iso: f.iso, name: f.name, subtitle: subtitle(f), status: f.status,
+                    photoID: model.photoIDs.first, effects: effects)
+            .padding(.top, 4)
     }
 
     private func subtitle(_ f: CountryFigures) -> String {

@@ -14,7 +14,6 @@ struct CountryTests {
     @Test func unmarkedCountryHasDefaults() {
         let f = CountryFigures.compute(entry: japan, record: nil, facts: ["A fact."])
         #expect(f.status == .none)
-        #expect(f.flag == "🇯🇵")
         #expect(!f.showsDates)
         #expect(f.facts == ["A fact."])
         #expect(f.notes == "")

@@ -36,6 +36,10 @@ enum Theme {
 
     static let accent = visited
 
+    // Text and the shade under it on a photo (the country page's hero).
+    static let onPhoto = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
+    static let photoScrim = dynamic(light: 0x0B0F12, dark: 0x0B0F12, lightAlpha: 0.62, darkAlpha: 0.7)
+
     // The Summit Flag's grid and pole (the mark, launch screen).
     static let markGrid = dynamic(light: 0x155A68, dark: 0x2A8394)
     static let markPole = dynamic(light: 0x17212B, dark: 0xF7F5F0)

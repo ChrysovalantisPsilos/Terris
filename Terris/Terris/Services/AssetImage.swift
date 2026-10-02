@@ -15,6 +15,8 @@ import Photos
 struct AssetImage: View {
     let assetIdentifier: String?
     var targetSize: CGSize = CGSize(width: 240, height: 240)
+    /// Called when the photo can't be shown (no access, or gone from the library).
+    var onUnavailable: (() -> Void)? = nil
 
     @Environment(\.displayScale) private var displayScale
     @State private var image: UIImage?
@@ -47,6 +49,7 @@ struct AssetImage: View {
               let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
         else {
             unavailable = true
+            onUnavailable?()
             return
         }
 
@@ -69,6 +72,9 @@ struct AssetImage: View {
         for await img in stream {
             withAnimation(Motion.quick) { image = img }
         }
-        if image == nil { unavailable = true }
+        if image == nil {
+            unavailable = true
+            onUnavailable?()
+        }
     }
 }
