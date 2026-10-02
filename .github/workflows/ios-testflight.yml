@@ -1,6 +1,7 @@
-# Builds Terris for the App Store and uploads it to TestFlight. By hand only
-# (Actions → ios-testflight → Run workflow): macOS minutes cost ten times
-# Linux ones. The same setup as the expense tracker's (Budgeer) TestFlight
+# Builds Terris for the App Store and uploads it to TestFlight. Only from
+# main: it runs on every push to main that touches the app (a release is the
+# owner's go, then main is fast-forwarded to develop), and never from develop
+# or by hand. The same setup as the expense tracker's (Budgeer) TestFlight
 # workflow.
 #
 # Signing is Xcode's automatic signing with cloud-managed certificates,
@@ -26,7 +27,9 @@
 # against the runner's keychain at the end of the job), never Budgeer's.
 name: ios-testflight
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['Terris/**', 'scripts/asc/**', '.github/workflows/ios-testflight.yml']
 
 permissions:
   contents: read
@@ -44,6 +47,8 @@ env:
 
 jobs:
   upload:
+    # Belt and braces: never upload anything but main.
+    if: github.ref == 'refs/heads/main'
     runs-on: macos-26
     # A hung archive would otherwise burn up to six hours of macOS minutes.
     timeout-minutes: 45

@@ -10,7 +10,7 @@ skill keeps this file current, so add project facts here, not in the skills.
 
 - **What it is:** a native iOS travel-footprint app. It shades the countries
   you've been to on a globe and gives one headline number: countries out of
-  195. Intake is import-first (it scans the photo library's locations), with
+  197. Intake is import-first (it scans the photo library's locations), with
   manual country and city marking, a manual flight log, and bundled fun facts
   on each country page.
 - **Stack:** SwiftUI, iOS 26, Core Data through `NSPersistentCloudKitContainer`
@@ -38,7 +38,9 @@ skill keeps this file current, so add project facts here, not in the skills.
   iCloud database (CloudKit Development for debug builds, Production for
   TestFlight and the App Store).
 - **Branches:** `develop` is where work lands; `main` is what's released.
-  A release is the owner's go → fast-forward `main` → TestFlight.
+  A release is the owner's go → fast-forward `main` → TestFlight. The
+  TestFlight build runs only on pushes to `main` that touch the app (owner's
+  rule, Oct 2026): never from `develop`, never by hand.
 - **Apple:** team `Z9KGWP5G82` (the same paid account as Budgeer), bundle id
   `com.chrysovalantis.Terris`, iCloud container
   `iCloud.com.chrysovalantis.Terris` (register it in the developer portal if
@@ -89,11 +91,13 @@ batches; never push WIP just to see if it compiles.
 - **Xcode versions:** the owner builds with Xcode 27 on their Mac; CI uses
   Xcode 26.5 on macos-26 (iPhone 17, iOS 26.5). Every change must build on
   both.
-- **Devices:** iPhone and iPad (`RootAdaptiveView` has an iPad split layout).
+- **Devices:** iPhone and iPad (`RootView` turns into a sidebar on iPad).
 - **Privacy strings:** the photo-library scan needs
   `NSPhotoLibraryUsageDescription`; it's in `project.yml`.
 - **TestFlight (the Budgeer setup):** `.github/workflows/ios-testflight.yml`,
-  by hand (Actions → ios-testflight → Run workflow). macos-26 / Xcode 26.5,
+  on every push to `main` that touches `Terris/**`, `scripts/asc/**` or the
+  workflow itself (so a release = fast-forward `main`; a failed run is retried
+  with GitHub's "Re-run jobs"). macos-26 / Xcode 26.5,
   `xcodebuild archive` + `-exportArchive` (app-store-connect, upload) with
   `-allowProvisioningUpdates` and the App Store Connect API key: cloud
   signing, no certificate or profile stored. Build number = the run number.
