@@ -92,12 +92,22 @@ jobs:
             -derivedDataPath "$DERIVED" -resultBundlePath TestResults.xcresult \
             $ONLY \
           | tee test.log | grep -E "error:|Test Case|Test Suite|Executed|\*\*"
+      # Crash reports from the Simulator (the app's own), so a crash in the
+      # UI tests can be read without the result bundle.
+      - name: Crash reports
+        if: failure()
+        run: |
+          mkdir -p snapshots
+          find ~/Library/Logs/DiagnosticReports -name 'Terris*' -mmin -60 -exec cp {} snapshots/ \; 2>/dev/null || true
+          ls snapshots | grep -v '\.png$' || echo "No crash reports."
       - name: Snapshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: snapshots
-          path: snapshots/*.png
+          path: |
+            snapshots/*.png
+            snapshots/*.ips
           if-no-files-found: ignore
       - name: Logs
         if: failure()
