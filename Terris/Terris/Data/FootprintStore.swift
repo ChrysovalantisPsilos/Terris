@@ -151,7 +151,7 @@ final class FootprintStore {
             lastVisit: row.lastVisitDate,
             notes: row.notes,
             cities: ((row.cities as? Set<City>) ?? []).compactMap(\.name).sorted(),
-            photoCount: row.photos?.count ?? 0)
+            photoCount: max(row.photos?.count ?? 0, Int(row.scannedPhotoCount)))
     }
 }
 
@@ -166,5 +166,77 @@ extension FootprintStore {
         guard !rows.isEmpty else { return }
         rows.forEach(context.delete)
         save()
+    }
+}
+
+// MARK: - Flights
+
+extension FootprintStore {
+    func flightRecords() -> [FlightRecord] {
+        let rows = (try? context.fetch(Flight.fetchRequest())) ?? []
+        return rows.compactMap { f in
+            guard let id = f.id else { return nil }
+            func point(_ a: Airport?) -> GeoPoint? {
+                guard let a, a.latitude != 0 || a.longitude != 0 else { return nil }
+                return GeoPoint(lon: a.longitude, lat: a.latitude)
+            }
+            return FlightRecord(id: id, date: f.departureDate,
+                                from: f.departureAirport?.iata ?? "", to: f.arrivalAirport?.iata ?? "",
+                                fromPoint: point(f.departureAirport), toPoint: point(f.arrivalAirport),
+                                fromCountry: f.departureAirport?.countryISO,
+                                toCountry: f.arrivalAirport?.countryISO,
+                                airline: f.airline, number: f.flightNumber, km: f.distanceKm)
+        }
+    }
+
+    /// The managed flight, for the detail and edit screens that still read it directly.
+    func flight(id: UUID) -> Flight? {
+        let req: NSFetchRequest<Flight> = Flight.fetchRequest()
+        req.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        req.fetchLimit = 1
+        return try? context.fetch(req).first
+    }
+
+    func deleteFlight(id: UUID) {
+        guard let flight = flight(id: id) else { return }
+        context.delete(flight)
+        save()
+    }
+}
+
+// MARK: - Photo scan
+
+extension FootprintStore {
+    /// Applies a finished scan. A country with photos counts as visited unless
+    /// the user already said Lived; visit dates widen to cover the photos.
+    /// Returns how many countries were newly added to the map.
+    @discardableResult
+    func applyScan(_ results: [ScannedCountry], now: Date = .now) -> Int {
+        var added = 0
+        for result in results where entry(for: result.iso) != nil {
+            let row = findOrCreate(result.iso)
+            let status = TravelStatus(rawValue: row.status) ?? .none
+            if status == .none || status == .wantToVisit {
+                row.status = TravelStatus.visited.rawValue
+                row.statusChangedAt = now
+                added += 1
+            }
+            if let first = result.first {
+                row.firstVisitDate = min(row.firstVisitDate ?? first, first)
+            }
+            if let last = result.last {
+                row.lastVisitDate = max(row.lastVisitDate ?? last, last)
+            }
+            row.scannedPhotoCount = Int32(clamping: result.count)
+            let existing = Set(((row.photos as? Set<TravelPhoto>) ?? []).compactMap(\.assetIdentifier))
+            for id in result.samples where !existing.contains(id) {
+                let photo = TravelPhoto(context: context)
+                photo.id = UUID()
+                photo.assetIdentifier = id
+                photo.country = row
+            }
+        }
+        save()
+        return added
     }
 }

@@ -11,6 +11,8 @@ import SwiftUI
 struct RootView: View {
     @Environment(FootprintStore.self) private var store
     @Environment(AppRouter.self) private var router
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
+    @State private var showingOnboarding = false
 
     var body: some View {
         @Bindable var router = router
@@ -19,7 +21,7 @@ struct RootView: View {
                 MapScreen()
             }
             Tab("Flights", systemImage: "airplane") {
-                NavigationStack { FlightTrackerView() }
+                FlightsScreen()
             }
             Tab(role: .search) {
                 SearchScreen()
@@ -34,7 +36,19 @@ struct RootView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $router.showingImport) {
-            PhotoImportView()
+            ScanScreen()
+        }
+        .fullScreenCover(isPresented: $showingOnboarding) {
+            ScanScreen { hasOnboarded = true }
+        }
+        .onAppear {
+            guard !hasOnboarded else { return }
+            // People who already marked countries skip the first-launch scan.
+            if store.countryRecords().contains(where: { $0.status != .none }) {
+                hasOnboarded = true
+            } else {
+                showingOnboarding = true
+            }
         }
     }
 }

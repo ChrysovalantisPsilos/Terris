@@ -159,6 +159,8 @@ struct GlobeMap: View {
 struct FlatMap: View {
     let statusByISO: [String: TravelStatus]
     var highlightISO: String? = nil
+    /// Flight routes, drawn as great-circle arcs.
+    var routes: [FlightFigures.Route] = []
     var onSelect: (String) -> Void = { _ in }
 
     /// Height / width of the drawn world (Equal Earth, without Antarctica's tail).
@@ -177,6 +179,7 @@ struct FlatMap: View {
                         let q = Projection.equalEarth(p)
                         return (CGPoint(x: mid.x + q.x * scale, y: mid.y - q.y * scale), true)
                     }
+                drawRoutes(&ctx, mid: mid, scale: scale)
             }
             .contentShape(Rectangle())
             .onTapGesture { location in
@@ -190,6 +193,35 @@ struct FlatMap: View {
         .aspectRatio(1 / Self.aspect, contentMode: .fit)
         .accessibilityElement()
         .accessibilityLabel(Text("World map"))
+    }
+
+    private func drawRoutes(_ ctx: inout GraphicsContext, mid: CGPoint, scale: CGFloat) {
+        guard !routes.isEmpty else { return }
+        func screen(_ p: GeoPoint) -> CGPoint {
+            let q = Projection.equalEarth(p)
+            return CGPoint(x: mid.x + q.x * scale, y: mid.y - q.y * scale)
+        }
+        var arcs = Path()
+        var ends = Path()
+        for route in routes {
+            var previous: GeoPoint?
+            for p in Projection.greatCircle(from: route.from, to: route.to) {
+                // Lift the pen where the arc crosses the date line.
+                if let prev = previous, abs(prev.lon - p.lon) < 180 {
+                    arcs.addLine(to: screen(p))
+                } else {
+                    arcs.move(to: screen(p))
+                }
+                previous = p
+            }
+            for end in [route.from, route.to] {
+                let pt = screen(end)
+                ends.addEllipse(in: CGRect(x: pt.x - 2.5, y: pt.y - 2.5, width: 5, height: 5))
+            }
+        }
+        ctx.stroke(arcs, with: .color(Theme.visited.opacity(0.85)), lineWidth: 1.4)
+        ctx.fill(ends, with: .color(Theme.card))
+        ctx.stroke(ends, with: .color(Theme.ink), lineWidth: 1)
     }
 
     /// Numeric inverse of Equal Earth (bisection on latitude); good to ~0.01°.

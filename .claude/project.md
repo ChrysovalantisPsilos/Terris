@@ -108,6 +108,21 @@ batches; never push WIP just to see if it compiles.
 - **Built screens:** snapshot tests on CI (the `snapshots` artifact), as on
   Budgeer.
 
+## Brand
+
+- **Mark (Oct 2026, picked by the owner from 8 concepts):** "Summit Flag",
+  a coral flag planted on a teal hemisphere with a globe grid: calm pride
+  in the places you've stood. Masters in `docs/brand/svg/`, sheet
+  `docs/brand/brand-sheet.png`, notes `docs/brand/README.txt`.
+- **Wordmark:** "Terris" in Outfit Bold, tracking −1%, outlined in the SVGs.
+- **Colours:** the Theme tokens: coral `#E8613C` (visited, accent), teal
+  `#1F7A8C` (lived), amber `#F2B134` (want to go, hatched), ink `#17212B`,
+  canvas `#F7F5F0`; dark variants in `Theme/Theme.swift`.
+- **App icon:** `AppIcon.appiconset` has light (opaque), dark and tinted
+  (transparent) 1024 px PNGs, the mark inside the central 80%.
+- **Headline count:** "of 197": the country list includes Taiwan and
+  Kosovo (owner's call, Oct 2026).
+
 ## Follow-ups a feature here usually needs
 
 - **Core Data model change:** this is pre-release, so a reset of the dev

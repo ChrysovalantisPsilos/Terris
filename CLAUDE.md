@@ -54,8 +54,8 @@ Terris/
     TerrisApp.swift          entry: store, router, launch screen
     Persistence.swift        NSPersistentCloudKitContainer (in-memory under tests)
     Terris.xcdatamodeld      v2: Country ⇢ City, TravelPhoto, Airport, Flight
-    App/                     RootView (Map · Flights · Search tabs, iPad sidebar),
-                             AppRouter (open country, import), MapLayout
+    App/                     RootView (Map · Flights · Search tabs, iPad sidebar,
+                             first-launch scan), AppRouter, MapLayout, LaunchScreenView
     Data/FootprintStore      the only Core Data reads/writes for the footprint
     Theme/                   tokens (Theme), Liquid Glass helpers (Glass)
     Geo/                     Projection (orthographic, Equal Earth), WorldShapes
@@ -64,12 +64,18 @@ Terris/
                              Atlas layouts), MapComponents
     Country/                 CountryFigures + CountryModel, CountryScreen (sheet)
     Search/                  SearchScreen, CountrySearch (pure)
+    Flights/                 FlightFigures (pure, great-circle routes), FlightsScreen;
+                             AddFlightView and FlightDetailView not yet revamped
+    Onboarding/              PhotoScanner (PHAsset locations, offline), ScanTally
+                             (pure), ScanScreen (first launch and the scan button)
     Models/                  static data: CountryData (the country list and the
                              denominator), CountryCentroids, AirportDatabase,
                              TravelStatus, CountryFacts
-    Services/                OfflineCountryResolver, EXIFReader, GeoMatchingService,
-                             AssetImage
-    Views/                   not yet revamped: Flights, Photos (import), LaunchScreen
-  TerrisTests/               Swift Testing: projections, figures, country, search, shapes
+    Services/                OfflineCountryResolver (nonisolated, used off-main by the
+                             scan), AssetImage (PHAsset thumbnails)
+    Assets.xcassets          AppIcon (light, dark, tinted), BrandLockup, AccentColor
+  TerrisTests/               Swift Testing: projections, figures, country, search,
+                             shapes, flights, scan tally
+docs/brand/                  logo masters (SVG), brand sheet, README
 .github/workflows/ios-app.yml   macOS CI: build, unit tests, snapshots by hand
 ```

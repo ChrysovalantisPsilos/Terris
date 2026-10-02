@@ -10,6 +10,7 @@
         <attribute name="firstVisitDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastVisitDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="scannedPhotoCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="cities" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="City" inverseName="country" inverseEntity="City"/>
         <relationship name="photos" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TravelPhoto" inverseName="country" inverseEntity="TravelPhoto"/>
     </entity>

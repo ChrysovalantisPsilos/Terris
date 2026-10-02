@@ -14,7 +14,9 @@
 import Foundation
 import MapKit
 
-final class OfflineCountryResolver {
+// Safe off the main actor: loading is guarded by `lock`, and entries are
+// read-only once loaded. The photo scan resolves on a background task.
+nonisolated final class OfflineCountryResolver: @unchecked Sendable {
     static let shared = OfflineCountryResolver()
 
     struct Entry {
