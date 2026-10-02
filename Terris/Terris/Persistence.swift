@@ -8,7 +8,10 @@
 import CoreData
 
 struct PersistenceController {
-    static let shared = PersistenceController()
+    /// Unit tests run inside the app; they get an in-memory store with no
+    /// iCloud, so a test run never syncs or waits on CloudKit.
+    static let shared = PersistenceController(
+        inMemory: ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil)
 
     @MainActor
     static let preview: PersistenceController = {
@@ -27,6 +30,7 @@ struct PersistenceController {
             c.isoCode = iso
             c.continent = continent
             c.status = TravelStatus.visited.rawValue
+            c.statusChangedAt = .now
         }
         try? viewContext.save()
         return result
@@ -37,7 +41,10 @@ struct PersistenceController {
     init(inMemory: Bool = false) {
         container = NSPersistentCloudKitContainer(name: "Terris")
         if inMemory {
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            let description = container.persistentStoreDescriptions.first!
+            description.url = URL(fileURLWithPath: "/dev/null")
+            // Previews and tests never talk to iCloud.
+            description.cloudKitContainerOptions = nil
         }
         container.loadPersistentStores { _, error in
             if let error = error as NSError? {
@@ -46,37 +53,5 @@ struct PersistenceController {
         }
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-
-        if !inMemory {
-            seedCountriesIfNeeded()
-        }
-    }
-
-    // MARK: - Seeding
-
-    private func seedCountriesIfNeeded() {
-        let ctx = container.viewContext
-        let req: NSFetchRequest<Country> = Country.fetchRequest()
-        req.fetchLimit = 1
-        guard (try? ctx.count(for: req)) == 0 else { return }
-
-        let countries = CountryData.all
-        for entry in countries {
-            let c = Country(context: ctx)
-            c.id = UUID()
-            c.name = entry.name
-            c.isoCode = entry.isoCode
-            c.continent = entry.continent
-            c.status = TravelStatus.none.rawValue
-            c.rating = 0
-        }
-        try? ctx.save()
-    }
-
-    func save() {
-        let ctx = container.viewContext
-        if ctx.hasChanges {
-            try? ctx.save()
-        }
     }
 }

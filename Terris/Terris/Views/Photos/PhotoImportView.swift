@@ -76,6 +76,7 @@ final class PhotoImportViewModel {
         if let country = s.matchedCountry,
            country.status == TravelStatus.none.rawValue {
             country.status = TravelStatus.visited.rawValue
+            country.statusChangedAt = .now
             country.firstVisitDate = s.exifResult.takenDate ?? Date()
         }
 

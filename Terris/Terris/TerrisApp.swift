@@ -2,19 +2,31 @@
 //  TerrisApp.swift
 //  Terris
 //
+
 import SwiftUI
 import CoreData
 
 @main
 struct TerrisApp: App {
-    let persistenceController = PersistenceController.shared
+    private let persistence = PersistenceController.shared
+    @State private var store: FootprintStore
+    @State private var router = AppRouter()
     @State private var isLaunching = true
+
+    init() {
+        let store = FootprintStore(context: PersistenceController.shared.container.viewContext)
+        store.pruneUntouchedRows()
+        _store = State(initialValue: store)
+    }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                RootAdaptiveView()
-                    .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                RootView()
+                    .environment(store)
+                    .environment(router)
+                    // The flight screens still read Core Data directly.
+                    .environment(\.managedObjectContext, persistence.container.viewContext)
 
                 if isLaunching {
                     LaunchScreenView()
@@ -23,10 +35,8 @@ struct TerrisApp: App {
                 }
             }
             .task {
-                try? await Task.sleep(nanoseconds: 2_200_000_000)
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    isLaunching = false
-                }
+                try? await Task.sleep(for: .seconds(1.2))
+                withAnimation(.easeInOut(duration: 0.4)) { isLaunching = false }
             }
         }
     }

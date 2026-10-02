@@ -62,6 +62,8 @@ jobs:
           CODE_SIGNING_ALLOWED=NO
           | tee build.log | grep -E "error:|warning: .*Terris/|BUILD|\*\*"
       - name: Tests
+        # A hung test host shouldn't eat the job's whole budget.
+        timeout-minutes: 15
         env:
           TEST_RUNNER_SNAPSHOT_DIR: ${{ github.workspace }}/snapshots
           TEST_RUNNER_TZ: UTC

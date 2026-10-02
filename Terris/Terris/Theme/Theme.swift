@@ -1,0 +1,103 @@
+//
+//  Theme.swift
+//  Terris
+//
+//  Design tokens. Every colour on screen comes from here, in light and dark.
+//  Glass is only for floating controls (see Glass.swift), never content cards.
+//
+
+import SwiftUI
+import UIKit
+
+enum Theme {
+    // MARK: Surfaces and text
+
+    static let canvas = dynamic(light: 0xF7F5F0, dark: 0x0F1418)
+    static let card = dynamic(light: 0xFFFFFF, dark: 0x1A2127)
+    static let subtle = dynamic(light: 0xEFEDE7, dark: 0x232B32)
+    static let ink = dynamic(light: 0x17212B, dark: 0xEEF1F3)
+    static let muted = dynamic(light: 0x6B7480, dark: 0x9AA4AE)
+
+    // MARK: Map
+
+    static let ocean = dynamic(light: 0xDCE6EA, dark: 0x12202A)
+    static let land = dynamic(light: 0xE6E2D8, dark: 0x2A3238)
+    static let border = dynamic(light: 0xFFFFFF, dark: 0x0F1418, lightAlpha: 0.7)
+    static let graticule = dynamic(light: 0x9AAAB4, dark: 0x3A4A56, lightAlpha: 0.35, darkAlpha: 0.5)
+
+    // MARK: Status
+
+    /// Visited — also the app's accent.
+    static let visited = dynamic(light: 0xE8613C, dark: 0xFF7A55)
+    static let lived = dynamic(light: 0x1F7A8C, dark: 0x3FB1C4)
+    static let wantTo = dynamic(light: 0xF2B134, dark: 0xF2B134)
+    /// Background under the want-to-go hatching.
+    static let wantToFill = dynamic(light: 0xFBE9C2, dark: 0x3A3222)
+
+    static let accent = visited
+
+    // MARK: Shape and motion
+
+    static let cardRadius: CGFloat = 22
+    static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
+    static let spring = Animation.spring(response: 0.38, dampingFraction: 0.86)
+
+    // MARK: Helpers
+
+    static func color(for status: TravelStatus) -> Color {
+        switch status {
+        case .none: land
+        case .wantToVisit: wantTo
+        case .visited: visited
+        case .livedIn: lived
+        }
+    }
+
+    private static func dynamic(light: UInt32, dark: UInt32,
+                                lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) -> Color {
+        Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: dark, alpha: darkAlpha)
+                : UIColor(hex: light, alpha: lightAlpha)
+        })
+    }
+}
+
+extension UIColor {
+    convenience init(hex: UInt32, alpha: CGFloat = 1) {
+        self.init(red: CGFloat((hex >> 16) & 0xFF) / 255,
+                  green: CGFloat((hex >> 8) & 0xFF) / 255,
+                  blue: CGFloat(hex & 0xFF) / 255,
+                  alpha: alpha)
+    }
+}
+
+// MARK: - Card
+
+extension View {
+    /// A content card: solid surface, continuous corners. Never glass.
+    func card(padding: CGFloat = 16) -> some View {
+        self.padding(padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.card, in: Theme.cardShape)
+    }
+}
+
+/// A small caps-free section title with an optional trailing action.
+struct SectionTitle<Trailing: View>: View {
+    let title: LocalizedStringKey
+    @ViewBuilder var trailing: () -> Trailing
+
+    init(_ title: LocalizedStringKey, @ViewBuilder trailing: @escaping () -> Trailing = { EmptyView() }) {
+        self.title = title
+        self.trailing = trailing
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+            Spacer()
+            trailing().font(.subheadline).foregroundStyle(Theme.accent)
+        }
+    }
+}

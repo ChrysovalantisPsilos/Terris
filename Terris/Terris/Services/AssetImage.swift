@@ -4,8 +4,8 @@
 //
 //  Loads a photo thumbnail on demand from the Photos library by its PHAsset
 //  local identifier, so Terris never has to persist full image blobs in
-//  Core Data / CloudKit. Falls back to any legacy inline data or a
-//  placeholder when the asset is unavailable.
+//  Core Data / CloudKit. Shows a placeholder when the asset is
+//  unavailable.
 //
 
 import SwiftUI
@@ -13,8 +13,6 @@ import Photos
 
 struct AssetImage: View {
     let assetIdentifier: String?
-    /// Legacy fallback for photos imported before reference-only storage.
-    var legacyData: Data? = nil
     var targetSize: CGSize = CGSize(width: 200, height: 200)
 
     @State private var image: UIImage?
@@ -23,8 +21,6 @@ struct AssetImage: View {
         Group {
             if let image {
                 Image(uiImage: image).resizable().scaledToFill()
-            } else if let legacyData, let img = UIImage(data: legacyData) {
-                Image(uiImage: img).resizable().scaledToFill()
             } else {
                 ZStack {
                     Color(.tertiarySystemFill)

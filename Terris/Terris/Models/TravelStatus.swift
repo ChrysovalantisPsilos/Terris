@@ -2,43 +2,28 @@
 //  TravelStatus.swift
 //  Terris
 //
+//  Stored as Int16 on Country.status. Colours live in Theme.color(for:).
+//
 
 import SwiftUI
 
-enum TravelStatus: Int16, CaseIterable, Identifiable {
-    case none       = 0
+enum TravelStatus: Int16, CaseIterable, Identifiable, Sendable {
+    case none        = 0
     case wantToVisit = 1
-    case visited    = 2
-    case livedIn    = 3
+    case visited     = 2
+    case livedIn     = 3
 
     var id: Int16 { rawValue }
 
-    var label: String {
+    /// The statuses a user can pick, in the order the picker shows them.
+    static let pickable: [TravelStatus] = [.visited, .livedIn, .wantToVisit]
+
+    var label: LocalizedStringKey {
         switch self {
-        case .none:        return "Not Visited"
-        case .wantToVisit: return "Want to Visit"
-        case .visited:     return "Visited"
-        case .livedIn:     return "Lived In"
+        case .none: "Not visited"
+        case .wantToVisit: "Want to go"
+        case .visited: "Visited"
+        case .livedIn: "Lived"
         }
     }
-
-    var icon: String {
-        switch self {
-        case .none:        return "circle"
-        case .wantToVisit: return "bookmark.fill"
-        case .visited:     return "checkmark.circle.fill"
-        case .livedIn:     return "house.fill"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .none:        return Color(.systemGray5)
-        case .wantToVisit: return Color(red: 0.655, green: 0.545, blue: 0.980) // lavender #A78BFA
-        case .visited:     return Color(red: 0.306, green: 0.804, blue: 0.769) // teal #4ECDC4
-        case .livedIn:     return Color(red: 1.0,   green: 0.820, blue: 0.400) // gold #FFD166
-        }
-    }
-
-
 }

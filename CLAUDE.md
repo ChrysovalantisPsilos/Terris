@@ -22,7 +22,8 @@ as screens are revamped.
    model; no silent `try?` on writes.
 3. **One source of truth for "been to":** visited + lived. The globe shading,
    the headline count and the continent breakdown all read it from the same
-   figures, so they can never disagree. The denominator is 195.
+   figures, so they can never disagree. The denominator is the size of the
+   country list (`CountryData.all`).
 4. **Design system only:** colours, fonts, radii and motion come from
    `Theme/` tokens. No raw `Color.pink`/hex in views. Light and dark for
    every token.
@@ -30,8 +31,9 @@ as screens are revamped.
    map overlays) via the `Theme` helpers, never on content cards. Otherwise
    follow iOS conventions: large titles, inset-grouped lists, sheet detents,
    the system font, SF Symbols.
-6. **No literal user-facing text in Swift:** strings go through
-   `Localizable.xcstrings` keys.
+6. **User-facing text is localizable:** `Text("…")` literals and
+   `LocalizedStringKey` parameters (extracted to the String Catalog), never
+   strings assembled in models or figures. English only for now.
 7. **Photos stay references:** store `PHAsset.localIdentifier`, never image
    data. Locations resolve offline (`OfflineCountryResolver`); no network
    geocoding for the footprint.
@@ -49,20 +51,25 @@ as screens are revamped.
 Terris/
   project.yml                XcodeGen spec (the .xcodeproj is generated)
   Terris/
-    TerrisApp.swift          entry, injects the Core Data context
-    Persistence.swift        NSPersistentCloudKitContainer, first-run seed of 195 countries
-    Terris.xcdatamodeld      Country, City, TravelPhoto, Flight (Region/Attraction/Trip pending removal)
-    Models/                  static data: CountryData, Continent, CountryCentroids,
-                             AirportDatabase, TravelStatus, CountryFacts
-    Services/                OfflineCountryResolver (point-in-polygon), EXIFReader,
-                             GeoMatchingService, AssetImage (PHAsset thumbnails)
-    Resources/               countries.geojson, countryFacts.json
-    Views/                   RootAdaptiveView (iPhone tabs / iPad split), Globe,
-                             Flights, PlaceDetail, Photos, Search, Stats, Sidebar
-  TerrisTests/, TerrisUITests/
+    TerrisApp.swift          entry: store, router, launch screen
+    Persistence.swift        NSPersistentCloudKitContainer (in-memory under tests)
+    Terris.xcdatamodeld      v2: Country ⇢ City, TravelPhoto, Airport, Flight
+    App/                     RootView (Map · Flights · Search tabs, iPad sidebar),
+                             AppRouter (open country, import), MapLayout
+    Data/FootprintStore      the only Core Data reads/writes for the footprint
+    Theme/                   tokens (Theme), Liquid Glass helpers (Glass)
+    Geo/                     Projection (orthographic, Equal Earth), WorldShapes
+                             (countries.geojson), GlobeMap / FlatMap canvases
+    Map/                     MapFigures (pure), MapModel, MapScreen (Globe, Journal,
+                             Atlas layouts), MapComponents
+    Country/                 CountryFigures + CountryModel, CountryScreen (sheet)
+    Search/                  SearchScreen, CountrySearch (pure)
+    Models/                  static data: CountryData (the country list and the
+                             denominator), CountryCentroids, AirportDatabase,
+                             TravelStatus, CountryFacts
+    Services/                OfflineCountryResolver, EXIFReader, GeoMatchingService,
+                             AssetImage
+    Views/                   not yet revamped: Flights, Photos (import), LaunchScreen
+  TerrisTests/               Swift Testing: projections, figures, country, search, shapes
 .github/workflows/ios-app.yml   macOS CI: build, unit tests, snapshots by hand
-docs/                        refactor plan and remaining model work
 ```
-
-The revamp moves screens into `Map/`, `Flights/`, `Country/`, `Onboarding/`
-feature folders with the layering above, plus `Theme/` and `Data/`.
