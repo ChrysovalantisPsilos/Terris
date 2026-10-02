@@ -1,7 +1,6 @@
 # Builds Terris for the App Store and uploads it to TestFlight. Only from
-# main: it runs on every push to main that touches the app (a release is the
-# owner's go, then main is fast-forwarded to develop), and never from develop
-# or by hand. The same setup as the expense tracker's (Budgeer) TestFlight
+# main: it runs on every push to main (a release is the owner's go, then main
+# is fast-forwarded to develop), and never from develop or by hand. The same setup as the expense tracker's (Budgeer) TestFlight
 # workflow.
 #
 # Signing is Xcode's automatic signing with cloud-managed certificates,
@@ -29,7 +28,6 @@ name: ios-testflight
 on:
   push:
     branches: [main]
-    paths: ['Terris/**', 'scripts/asc/**', '.github/workflows/ios-testflight.yml']
 
 permissions:
   contents: read

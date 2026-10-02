@@ -4,8 +4,9 @@
 //
 //  Loads a photo thumbnail on demand from the Photos library by its PHAsset
 //  local identifier, so Terris never has to persist full image blobs in
-//  Core Data / CloudKit. Shows a placeholder when the asset is
-//  unavailable.
+//  Core Data / CloudKit. A quick preview shows first and sharpens when the
+//  full thumbnail arrives (from iCloud if the library keeps originals
+//  there). Without Photos access it shows a lock instead of a blank tile.
 //
 
 import SwiftUI
@@ -13,48 +14,61 @@ import Photos
 
 struct AssetImage: View {
     let assetIdentifier: String?
-    var targetSize: CGSize = CGSize(width: 200, height: 200)
+    var targetSize: CGSize = CGSize(width: 240, height: 240)
 
+    @Environment(\.displayScale) private var displayScale
     @State private var image: UIImage?
+    @State private var unavailable = false
 
     var body: some View {
-        Group {
+        ZStack {
+            Theme.subtle
             if let image {
-                Image(uiImage: image).resizable().scaledToFill()
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .transition(.opacity)
             } else {
-                ZStack {
-                    Color(.tertiarySystemFill)
-                    Image(systemName: "photo").foregroundStyle(.secondary)
-                }
+                Image(systemName: unavailable ? "lock" : "photo")
+                    .foregroundStyle(Theme.muted)
             }
         }
+        .clipped()
         .task(id: assetIdentifier) { await load() }
     }
 
     private func load() async {
-        guard image == nil, let id = assetIdentifier, !id.isEmpty else { return }
-        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
-        else { return }
+        guard let id = assetIdentifier, !id.isEmpty else { return }
+        var status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if status == .notDetermined {
+            status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+        }
+        guard status == .authorized || status == .limited,
+              let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
+        else {
+            unavailable = true
+            return
+        }
 
         let options = PHImageRequestOptions()
-        options.deliveryMode = .highQualityFormat   // single callback
-        options.isNetworkAccessAllowed = true
+        options.deliveryMode = .opportunistic   // a fast preview, then the sharp one
+        options.isNetworkAccessAllowed = true   // originals kept in iCloud
         options.resizeMode = .fast
+        let size = CGSize(width: targetSize.width * displayScale, height: targetSize.height * displayScale)
 
-        let scale = UIScreen.main.scale
-        let size = CGSize(width: targetSize.width * scale, height: targetSize.height * scale)
-
-        let result: UIImage? = await withCheckedContinuation { continuation in
-            var resumed = false
-            PHImageManager.default().requestImage(
+        let stream = AsyncStream<UIImage> { continuation in
+            let request = PHImageManager.default().requestImage(
                 for: asset, targetSize: size, contentMode: .aspectFill, options: options
-            ) { img, _ in
-                // Opportunistic delivery can call back more than once; resume once.
-                guard !resumed else { return }
-                resumed = true
-                continuation.resume(returning: img)
+            ) { img, info in
+                if let img { continuation.yield(img) }
+                let degraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                if !degraded { continuation.finish() }
             }
+            continuation.onTermination = { _ in PHImageManager.default().cancelImageRequest(request) }
         }
-        if let result { image = result }
+        for await img in stream {
+            withAnimation(Motion.quick) { image = img }
+        }
+        if image == nil { unavailable = true }
     }
 }

@@ -212,6 +212,8 @@ struct PullUpPanel<Content: View>: View {
             let full = geo.size.height * 0.9
             let base = expanded ? full : collapsedHeight
             let height = min(max(base - drag, collapsedHeight * 0.8), full)
+            // The panel keeps its full height and slides: an offset moves it
+            // without laying the lists out again every frame of a drag.
             VStack(spacing: 0) {
                 Capsule()
                     .fill(Theme.muted.opacity(0.4))
@@ -220,7 +222,7 @@ struct PullUpPanel<Content: View>: View {
                     .padding(.bottom, 10)
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
-                    .onTapGesture { withAnimation(Theme.spring) { expanded.toggle() } }
+                    .onTapGesture { withAnimation(Motion.spring) { expanded.toggle() } }
                     .gesture(
                         DragGesture()
                             .updating($drag) { value, state, _ in state = value.translation.height }
@@ -239,13 +241,15 @@ struct PullUpPanel<Content: View>: View {
                 }
                 .scrollIndicators(.hidden)
             }
-            .frame(height: height)
+            .frame(height: full, alignment: .top)
             .frame(maxWidth: .infinity)
             .background(
                 UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
                     .fill(Theme.canvas)
                     .shadow(color: .black.opacity(0.08), radius: 16, y: -4)
                     .ignoresSafeArea(edges: .bottom))
+            .offset(y: full - height)
+            .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.86), value: drag)
             .frame(maxHeight: .infinity, alignment: .bottom)
         }
     }

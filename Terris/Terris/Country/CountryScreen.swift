@@ -147,7 +147,7 @@ struct CountryScreen: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 4), spacing: 4) {
                 ForEach(model.photoIDs, id: \.self) { id in
                     AssetImage(assetIdentifier: id)
-                        .aspectRatio(1, contentMode: .fill)
+                        .aspectRatio(1, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
             }

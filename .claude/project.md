@@ -39,7 +39,7 @@ skill keeps this file current, so add project facts here, not in the skills.
   TestFlight and the App Store).
 - **Branches:** `develop` is where work lands; `main` is what's released.
   A release is the owner's go → fast-forward `main` → TestFlight. The
-  TestFlight build runs only on pushes to `main` that touch the app (owner's
+  TestFlight build runs on every push to `main` and only then (owner's
   rule, Oct 2026): never from `develop`, never by hand. The commit at the
   tip of a release must not say `[skip ci]`: GitHub then skips every
   workflow for the push, TestFlight included.
@@ -97,9 +97,9 @@ batches; never push WIP just to see if it compiles.
 - **Privacy strings:** the photo-library scan needs
   `NSPhotoLibraryUsageDescription`; it's in `project.yml`.
 - **TestFlight (the Budgeer setup):** `.github/workflows/ios-testflight.yml`,
-  on every push to `main` that touches `Terris/**`, `scripts/asc/**` or the
-  workflow itself (so a release = fast-forward `main`; a failed run is retried
-  with GitHub's "Re-run jobs"). macos-26 / Xcode 26.5,
+  on every push to `main` (so a release = fast-forward `main`; a failed run
+  is retried with GitHub's "Re-run jobs"). No `paths` filter: on a push it
+  only sees the files of that push, so a docs-only tip skipped the build. macos-26 / Xcode 26.5,
   `xcodebuild archive` + `-exportArchive` (app-store-connect, upload) with
   `-allowProvisioningUpdates` and the App Store Connect API key: cloud
   signing, no certificate or profile stored. Build number = the run number.
