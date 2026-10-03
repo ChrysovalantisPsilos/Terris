@@ -18,6 +18,7 @@
 #   ASC_ISSUER_ID     the issuer id (Users and Access → Integrations)
 #   ASC_KEY_P8        the key file's contents (AuthKey_<id>.p8), BEGIN/END lines included
 #   APPLE_TEAM_ID     the developer team id
+#   CLOUDKIT_MANAGEMENT_TOKEN  checks the iCloud Production schema before uploading
 # The key goes to a file only this job can read and is removed at the end;
 # nothing here prints a secret.
 #
@@ -79,6 +80,24 @@ jobs:
         run: brew install xcodegen
       - name: Project
         run: cd Terris && xcodegen generate
+      # A field missing from iCloud Production breaks sync for its record
+      # type, so nothing ships until Production has every field the model
+      # uses (deploying is the owner's one tap in the CloudKit Console; the
+      # cloudkit-schema workflow puts new fields in Development).
+      - name: iCloud Production has this build's fields
+        env:
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$CLOUDKIT_MANAGEMENT_TOKEN" ]; then
+            echo "::error::CLOUDKIT_MANAGEMENT_TOKEN isn't set, so the iCloud schema can't be checked (CloudKit Console → Settings → Tokens & Keys → Management Token)."
+            exit 1
+          fi
+          scripts/cloudkit/save-token.sh
+          TEAM=$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')
+          xcrun cktool export-schema --team-id "$TEAM" --container-id iCloud.com.chrysovalantis.Terris \
+            --environment production --output-file "$RUNNER_TEMP/prod.ckdb"
+          node scripts/cloudkit/schema.mjs check Terris/Terris/Terris.xcdatamodeld "$RUNNER_TEMP/prod.ckdb"
       - name: The API key and the export options
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}

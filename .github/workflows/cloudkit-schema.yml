@@ -1,0 +1,89 @@
+# Keeps the iCloud (CloudKit) schema in step with the Core Data model, so a
+# model change needs no Xcode run on the owner's Mac. On a push to develop
+# that changes the model (or by hand), it:
+#   1. adds the fields the model needs to the Development schema
+#      (scripts/cloudkit/schema.mjs, via Apple's `xcrun cktool`), and
+#   2. reports what Production still lacks.
+# Production itself only changes when the owner taps "Deploy Schema Changes"
+# in the CloudKit Console (Apple has no API for it; the Console works on a
+# phone). ios-testflight refuses to upload until Production has every field.
+#
+# Secrets: CLOUDKIT_MANAGEMENT_TOKEN (CloudKit Console → Settings → Tokens &
+# Keys → Management Token), APPLE_TEAM_ID. Nothing here prints a secret.
+name: cloudkit-schema
+on:
+  push:
+    branches: [develop]
+    paths: ['Terris/Terris/Terris.xcdatamodeld/**', 'scripts/cloudkit/**', '.github/workflows/cloudkit-schema.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudkit-schema
+  cancel-in-progress: false
+
+env:
+  CONTAINER: iCloud.com.chrysovalantis.Terris
+  MODEL: Terris/Terris/Terris.xcdatamodeld
+
+jobs:
+  schema:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tool tests
+        run: node --test scripts/cloudkit/schema.test.mjs
+      - name: Check the secret
+        id: secret
+        env:
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+        run: |
+          if [ -z "$CLOUDKIT_MANAGEMENT_TOKEN" ]; then
+            echo "::warning::CLOUDKIT_MANAGEMENT_TOKEN isn't set (CloudKit Console → Settings → Tokens & Keys → Management Token). Skipping."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Pin Xcode
+        if: steps.secret.outputs.ok == 'true'
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app && xcodebuild -version
+      - name: Sign in to CloudKit
+        if: steps.secret.outputs.ok == 'true'
+        env:
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+        run: scripts/cloudkit/save-token.sh
+      - name: Development — add the model's new fields
+        if: steps.secret.outputs.ok == 'true'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          TEAM=$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')
+          xcrun cktool export-schema --team-id "$TEAM" --container-id "$CONTAINER" \
+            --environment development --output-file "$RUNNER_TEMP/dev.ckdb"
+          node scripts/cloudkit/schema.mjs plan "$MODEL" "$RUNNER_TEMP/dev.ckdb" "$RUNNER_TEMP/dev-new.ckdb"
+          if cmp -s "$RUNNER_TEMP/dev.ckdb" "$RUNNER_TEMP/dev-new.ckdb"; then
+            echo "Nothing to import."
+          else
+            xcrun cktool import-schema --team-id "$TEAM" --container-id "$CONTAINER" \
+              --environment development --file "$RUNNER_TEMP/dev-new.ckdb"
+            echo "Development schema updated."
+          fi
+      - name: Production — what still needs deploying
+        if: steps.secret.outputs.ok == 'true'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          TEAM=$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')
+          xcrun cktool export-schema --team-id "$TEAM" --container-id "$CONTAINER" \
+            --environment production --output-file "$RUNNER_TEMP/prod.ckdb"
+          if node scripts/cloudkit/schema.mjs check "$MODEL" "$RUNNER_TEMP/prod.ckdb"; then
+            echo "Production is up to date."
+          else
+            echo "::notice::Tap Deploy Schema Changes in the CloudKit Console (Development) to bring Production up to date."
+          fi
