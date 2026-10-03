@@ -19,6 +19,8 @@ struct CountryRecord: Equatable, Sendable {
     var notes: String?
     var cities: [String]
     var photoCount: Int
+    /// The photo the owner chose for the country page, if any.
+    var coverPhoto: String? = nil
 }
 
 /// One row in a list of countries.

@@ -45,4 +45,22 @@ struct PhotoReferencesTests {
         #expect(Set(s.photoIdentifiers(for: "JP")) == ["icloud:C1", "icloud:C2"])
         #expect(s.localPhotoReferences().isEmpty)
     }
+
+    @Test func theCoverComesFirst() {
+        #expect(FootprintStore.coverFirst(["a", "b", "c"], cover: "c") == ["c", "a", "b"])
+        #expect(FootprintStore.coverFirst(["a", "b"], cover: "gone") == ["a", "b"])
+        #expect(FootprintStore.coverFirst(["a", "b"], cover: nil) == ["a", "b"])
+    }
+
+    @Test func choosingACoverAndRemovingPhotos() {
+        let s = store()
+        s.applyScan([ScannedCountry(iso: "SA", count: 3, first: nil, last: nil, samples: ["icloud:A", "icloud:B", "icloud:C"])])
+        s.setCoverPhoto("icloud:C", for: "SA")
+        #expect(s.photoIdentifiers(for: "SA").first == "icloud:C")
+        #expect(s.record(for: "SA")?.coverPhoto == "icloud:C")
+        // Removing the cover clears it; the others stay.
+        s.removePhotos(["icloud:C", "icloud:A"], from: "SA")
+        #expect(s.photoIdentifiers(for: "SA") == ["icloud:B"])
+        #expect(s.record(for: "SA")?.coverPhoto == nil)
+    }
 }

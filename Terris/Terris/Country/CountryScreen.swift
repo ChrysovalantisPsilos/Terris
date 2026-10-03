@@ -58,16 +58,7 @@ struct CountryScreen: View {
             }
         }
         .scrollIndicators(.hidden)
-        // The hero starts inside the safe area (a sheet's top edge sits lower
-        // on a real phone than the screen's); the sky colour fills the strip
-        // above it so the hero still reads as edge to edge.
-        .background {
-            VStack(spacing: 0) {
-                Theme.skyTop.frame(height: CountryHero.height)
-                Theme.canvas
-            }
-            .ignoresSafeArea()
-        }
+        .background(Theme.canvas.ignoresSafeArea())
         .overlay(alignment: .topLeading) {
             GlassIconButton(systemImage: "xmark", label: "Close") { dismiss() }
                 .padding(.leading, Theme.margin)
@@ -145,14 +136,13 @@ struct CountryScreen: View {
 
     private func photos(_ f: CountryFigures) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionTitle("Photos") { Text("\(f.photoCount)").foregroundStyle(Theme.muted) }
+            SectionTitle("Photos") {
+                Text("Touch and hold to choose").foregroundStyle(Theme.muted)
+            }
             ScrollView(.horizontal) {
                 HStack(spacing: 10) {
-                    // Only photos that open; the note below explains the rest.
-                    ForEach(model.photoIDs.filter { photoProblems[$0] == nil }, id: \.self) { id in
-                        AssetImage(assetIdentifier: id, onUnavailable: { photoProblems[id] = $0 })
-                            .frame(width: 104, height: 104)
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    ForEach(model.photoIDs, id: \.self) { id in
+                        photoTile(id, isCover: id == f.cover)
                     }
                 }
                 .padding(.horizontal, Theme.margin)
@@ -163,6 +153,38 @@ struct CountryScreen: View {
                 photoNote(problem)
             }
         }
+    }
+
+    /// A photo: the cover gets a badge; touch and hold to make it the cover
+    /// or remove it from this country (the photo stays in your library).
+    private func photoTile(_ id: String, isCover: Bool) -> some View {
+        AssetImage(assetIdentifier: id, onUnavailable: { photoProblems[id] = $0 })
+            .frame(width: 112, height: 112)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(alignment: .topLeading) {
+                if isCover {
+                    Label("Cover", systemImage: "star.fill")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Theme.onPhoto)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Theme.photoScrim, in: Capsule())
+                        .padding(8)
+                }
+            }
+            .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contextMenu {
+                if photoProblems[id] == nil {
+                    Button { model.setCover(id) } label: { Label("Use as cover", systemImage: "star") }
+                        .disabled(isCover)
+                }
+                Button(role: .destructive) {
+                    photoProblems[id] = nil
+                    model.removePhotos([id])
+                } label: {
+                    Label("Remove from this country", systemImage: "trash")
+                }
+            }
+            .accessibilityLabel(isCover ? Text("Cover photo") : Text("Photo"))
     }
 
     /// The reason that matters most: no access, then limited, then missing.
@@ -187,8 +209,17 @@ struct CountryScreen: View {
                 settingsButton
             case .missing:
                 Text("Some photos aren't on this iPhone").font(.headline)
-                Text("They were found on a device that hasn't shared them yet, or have been deleted. Open Terris once on the device that found them, with iCloud Photos on, and they'll appear here.")
+                Text("They were deleted, or found on a device that isn't sharing them through iCloud Photos.")
                     .font(.subheadline).foregroundStyle(Theme.muted)
+                Button(role: .destructive) {
+                    let gone = photoProblems.filter { $0.value == .missing }.map(\.key)
+                    for id in gone { photoProblems[id] = nil }
+                    model.removePhotos(gone)
+                } label: {
+                    Label("Remove them", systemImage: "trash").font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .padding(.top, 4)
             case .couldNotLoad:
                 Text("Some photos couldn't be loaded").font(.headline)
                 Text("They're kept in iCloud Photos and didn't download just now. Check your connection and open this page again.")

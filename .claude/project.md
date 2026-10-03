@@ -161,8 +161,13 @@ batches; never push WIP just to see if it compiles.
 
 ## Follow-ups a feature here usually needs
 
-- **Core Data model change:** this is pre-release, so a reset of the dev
-  store is acceptable. Once there are TestFlight users, write a migration.
+- **Core Data model change:** add a new model version (lightweight
+  migration; new attributes optional). Then, BEFORE main is pushed (main
+  pushes go straight to TestFlight, which syncs with CloudKit Production):
+  the owner runs the develop build from Xcode with -initCloudKitSchema and
+  deploys the schema to Production. A field missing from the Production
+  schema breaks iCloud sync for that record type. v3 (Oct 2026) added
+  Country.coverPhoto.
 - **CloudKit:** new attributes must be optional or have defaults, and
   relationships must have inverses (CloudKit rule).
 - **Privacy:** new data types or permissions get a usage string and a line in

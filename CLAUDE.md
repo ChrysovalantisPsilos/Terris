@@ -58,7 +58,7 @@ Terris/
   Terris/
     TerrisApp.swift          entry: store, router, launch screen
     Persistence.swift        NSPersistentCloudKitContainer (in-memory under tests)
-    Terris.xcdatamodeld      v2: Country ⇢ City, TravelPhoto, Airport, Flight
+    Terris.xcdatamodeld      v3: Country (coverPhoto) ⇢ City, TravelPhoto, Airport, Flight
     App/                     RootView (Map · Flights · Search tabs, iPad sidebar,
                              first-launch scan and tour), AppRouter, MapLayout, LaunchScreenView
     Data/FootprintStore      the only Core Data reads/writes for the footprint
@@ -74,7 +74,8 @@ Terris/
     Map/                     MapFigures (pure), MapModel, MapScreen (Globe, Journal,
                              Atlas layouts), MapComponents
     Country/                 CountryFigures + CountryModel, CountryScreen (sheet),
-                             CountryHero (your newest photo there, or the outline)
+                             CountryHero (your cover photo there, or the outline);
+                             touch and hold a photo to make it the cover or remove it
     Search/                  SearchScreen, CountrySearch (pure)
     Flights/                 FlightFigures (pure, great-circle routes, distance),
                              FlightDraft + AirportSearch (pure), FlightsScreen (tab),

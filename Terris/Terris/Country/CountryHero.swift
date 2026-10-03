@@ -32,41 +32,55 @@ struct CountryHero: View {
     private var showsPhoto: Bool { photoID != nil }
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            if showsPhoto {
-                AssetImage(assetIdentifier: photoID, targetSize: CGSize(width: 440, height: Self.height),
-                           onUnavailable: { _ in skipped += 1 })
-                    .id(photoID)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                LinearGradient(stops: [
-                    .init(color: .clear, location: 0.35),
-                    .init(color: Theme.photoScrim, location: 0.82),
-                    .init(color: Theme.canvas, location: 1),
-                ], startPoint: .top, endPoint: .bottom)
-            } else {
-                illustration
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(name)
-                    .font(.system(size: 44, weight: .heavy))
-                    .tracking(-0.8)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.55)
-                subtitle
-                    .font(.headline.weight(.medium))
-                    .opacity(0.92)
-            }
-            .foregroundStyle(showsPhoto ? Theme.onPhoto : Theme.ink)
-            .padding(.horizontal, Theme.margin)
-            // Leaves room for the status picker that floats over the bottom.
-            .padding(.bottom, 84)
+        // A fixed-height frame with the picture behind it: a tall photo
+        // filled into a ZStack would grow the stack past the frame and push
+        // the name down under the status picker.
+        Color.clear
+            .frame(height: Self.height)
+            .frame(maxWidth: .infinity)
+            .background { picture }
+            .overlay(alignment: .bottomLeading) { title }
+            .overlay(alignment: .topTrailing) { globe }
+            .clipped()
+            .onChange(of: photoIDs) { skipped = 0 }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder
+    private var picture: some View {
+        if let photoID {
+            AssetImage(assetIdentifier: photoID, targetSize: CGSize(width: 440, height: Self.height),
+                       onUnavailable: { _ in skipped += 1 })
+                .id(photoID)
+                .overlay {
+                    LinearGradient(stops: [
+                        .init(color: .clear, location: 0.3),
+                        .init(color: Theme.photoScrim, location: 0.78),
+                        .init(color: Theme.canvas, location: 1),
+                    ], startPoint: .top, endPoint: .bottom)
+                }
+        } else {
+            illustration
         }
-        .overlay(alignment: .topTrailing) { globe }
-        .frame(height: Self.height)
-        .frame(maxWidth: .infinity)
-        .clipped()
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isHeader)
+    }
+
+    private var title: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(name)
+                .font(.system(size: 44, weight: .heavy))
+                .tracking(-0.8)
+                .lineLimit(2)
+                .minimumScaleFactor(0.55)
+            subtitle
+                .font(.headline.weight(.medium))
+                .opacity(0.92)
+        }
+        .foregroundStyle(showsPhoto ? Theme.onPhoto : Theme.ink)
+        .shadow(color: showsPhoto ? Theme.photoScrim : .clear, radius: 8)
+        .padding(.horizontal, Theme.margin)
+        // Leaves room for the status picker that floats over the bottom.
+        .padding(.bottom, 84)
     }
 
     /// The outline under the sky, top right, clear of the name.

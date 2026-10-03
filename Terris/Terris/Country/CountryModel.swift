@@ -18,6 +18,8 @@ struct CountryFigures: Equatable, Sendable {
     var cities: [String]
     var photoCount: Int
     var facts: [String]
+    /// The photo the owner chose as the cover, if any.
+    var cover: String?
 
     /// Dates only make sense once you've been.
     var showsDates: Bool { status == .visited || status == .livedIn }
@@ -33,7 +35,8 @@ struct CountryFigures: Equatable, Sendable {
             notes: record?.notes ?? "",
             cities: record?.cities ?? [],
             photoCount: record?.photoCount ?? 0,
-            facts: facts)
+            facts: facts,
+            cover: record?.coverPhoto)
     }
 
     /// Tapping the selected status again clears it.
@@ -61,7 +64,7 @@ final class CountryModel {
         guard let entry = store.entry(for: iso) else { figures = nil; return }
         figures = CountryFigures.compute(entry: entry, record: store.record(for: iso),
                                          facts: CountryFacts.facts(for: iso))
-        photoIDs = store.photoIdentifiers(for: iso, limit: 8)
+        photoIDs = store.photoIdentifiers(for: iso, limit: 12)
     }
 
     func tap(_ status: TravelStatus) {
@@ -78,5 +81,7 @@ final class CountryModel {
         load()
     }
     func addCity(_ name: String) { store.addCity(name, to: iso); load() }
+    func setCover(_ reference: String?) { store.setCoverPhoto(reference, for: iso); load() }
+    func removePhotos(_ references: [String]) { store.removePhotos(references, from: iso); load() }
     func removeCity(_ name: String) { store.removeCity(name, from: iso); load() }
 }

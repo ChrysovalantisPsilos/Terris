@@ -51,12 +51,19 @@ final class FootprintStore {
         rowsByISO()[iso].map(Self.record)
     }
 
+    /// A country's photo references, the owner's chosen cover first.
     func photoIdentifiers(for iso: String, limit: Int = 12) -> [String] {
         let req: NSFetchRequest<TravelPhoto> = TravelPhoto.fetchRequest()
         req.predicate = NSPredicate(format: "country.isoCode == %@ AND assetIdentifier != nil", iso)
         req.sortDescriptors = [NSSortDescriptor(key: "takenDate", ascending: false)]
-        req.fetchLimit = limit
-        return ((try? context.fetch(req)) ?? []).compactMap(\.assetIdentifier)
+        let all = ((try? context.fetch(req)) ?? []).compactMap(\.assetIdentifier)
+        return Array(Self.coverFirst(all, cover: rowsByISO()[iso]?.coverPhoto).prefix(limit))
+    }
+
+    /// The cover (when it's still among the photos) moved to the front.
+    static func coverFirst(_ references: [String], cover: String?) -> [String] {
+        guard let cover, references.contains(cover) else { return references }
+        return [cover] + references.filter { $0 != cover }
     }
 
     // MARK: Writes
@@ -151,7 +158,8 @@ final class FootprintStore {
             lastVisit: row.lastVisitDate,
             notes: row.notes,
             cities: ((row.cities as? Set<City>) ?? []).compactMap(\.name).sorted(),
-            photoCount: max(row.photos?.count ?? 0, Int(row.scannedPhotoCount)))
+            photoCount: max(row.photos?.count ?? 0, Int(row.scannedPhotoCount)),
+            coverPhoto: row.coverPhoto)
     }
 }
 
@@ -248,6 +256,28 @@ extension FootprintStore {
 // MARK: - Photo references
 
 extension FootprintStore {
+    /// The photo the country page opens on (nil: the first that opens).
+    func setCoverPhoto(_ reference: String?, for iso: String) {
+        let row = findOrCreate(iso)
+        guard row.coverPhoto != reference else { return }
+        row.coverPhoto = reference
+        save()
+    }
+
+    /// Removes photos from a country (only Terris's references: the photos
+    /// stay in the library). Clears the cover if it was one of them.
+    func removePhotos(_ references: [String], from iso: String) {
+        guard !references.isEmpty, let row = rowsByISO()[iso] else { return }
+        let gone = Set(references)
+        for photo in (row.photos as? Set<TravelPhoto>) ?? [] where gone.contains(photo.assetIdentifier ?? "") {
+            context.delete(photo)
+        }
+        if let cover = row.coverPhoto, gone.contains(cover) { row.coverPhoto = nil }
+        save()
+    }
+}
+
+extension FootprintStore {
     /// Photo references still in a device's local form (see PhotoReferences).
     func localPhotoReferences() -> [String] {
         let req: NSFetchRequest<TravelPhoto> = TravelPhoto.fetchRequest()
@@ -265,6 +295,7 @@ extension FootprintStore {
         guard let rows = try? context.fetch(req), !rows.isEmpty else { return }
         for row in rows {
             guard let old = row.assetIdentifier, let new = map[old] else { continue }
+            if row.country?.coverPhoto == old { row.country?.coverPhoto = new }
             let siblings = (row.country?.photos as? Set<TravelPhoto>) ?? []
             if siblings.contains(where: { $0 !== row && $0.assetIdentifier == new }) {
                 context.delete(row)
